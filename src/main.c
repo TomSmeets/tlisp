@@ -233,12 +233,34 @@ static bool str_eq(char *a, char *b) {
 // ================
 // Eval
 // ================
-static Expr *eval_list(Expr *e);
-static Expr *eval_value(Expr *e) {
-    if(e->type == Expr_Cons) return eval_list(e);
+
+typedef struct Env Env;
+struct Env {
+    char *key;
+    Expr *value;
+    Env *next;
+};
+
+static Expr *env_search(Env *e, char *label) {
+    for(;;) {
+        if(e == 0) return 0;
+        if(str_eq(e->key, label)) return e->value;
+        e = e->next;
+    }
+}
+
+static Expr *eval_list(Expr *e, Env *env);
+
+static Expr *eval_value(Expr *e, Env *env) {
+    if (e->type == Expr_Cons) return eval_list(e, env);
+    if (e->type == Expr_Label) {
+        Expr *e2 = env_search(env, e->label);
+        if(!e2)  printf("Value not found: %s\n", e->label);
+        return e2;
+    }
     return e;
 }
-static Expr *eval_list(Expr *e) {
+static Expr *eval_list(Expr *e, Env *env) {
     Expr *car = e->car;
     char *label = e->car->label;
 
@@ -246,7 +268,7 @@ static Expr *eval_list(Expr *e) {
         long sum = 0;
         Expr *it = e->cdr;
         while(it) {
-            Expr *val =eval_value(it->car);
+            Expr *val =eval_value(it->car, env);
             if (val->type != Expr_Num) {
                 printf("ERROR\n");
                 break;
@@ -257,20 +279,34 @@ static Expr *eval_list(Expr *e) {
         return expr_num(sum);
     }
 
+    if(str_eq(label, "let")) {
+        // Label
+        Expr *arg0 = e->cdr;
+
+        // value
+        Expr *arg1 = arg0->cdr;
+
+        // Rest
+        Expr *arg2 = arg1->cdr;
+
+        Env *env2 = mem_struct(Env);
+        env2->key = arg0->car->label;
+        env2->value = eval_value(arg1->car, env);
+        env2->next = env;
+        return eval_value(arg2->car, env2);
+    }
+
     return e;
 }
 
 int main(void) {
-    const char code[] = "(+ 1 2 (+ 1 2) (+ 2 2 2 -2)";
+    const char code[] = "(let a 4 (let b 5 (+ a b 5 a a)))";
     printf("Code: %s\n", code);
-
-    char *cursor = (char *)code;
-    char *end = cursor + sizeof(code);
 
     Parse p = {.cursor = (char *)code};
     Expr *e = parse_value(&p);
     pretty_value(e);
     printf("\n");
-    pretty_value(eval_list(e));
+    pretty_value(eval_value(e, 0));
     printf("\n");
 }
