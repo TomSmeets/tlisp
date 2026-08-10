@@ -86,6 +86,7 @@ static Expr *parse_value(Parse *p) {
         c = parse_peek(p);
         if (c == '\0') break;
         if (c == ' ') break;
+        if (c == '\n') break;
         if (c == ')') break;
         if (c == '(') break;
         parse_next(p);
@@ -107,6 +108,11 @@ static Expr *parse_list(Parse *p) {
     if (c == ')') {
         parse_next(p);
         return 0;
+    }
+
+    if (c == '.') {
+        parse_next(p);
+        return parse_value(p);
     }
 
     if (c == '\0') {

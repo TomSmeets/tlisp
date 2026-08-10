@@ -1,6 +1,7 @@
 // Evaluate tlisp expressions
 #pragma once
 #include "ast.h"
+#include "pretty.h"
 #include "str.h"
 #include "env.h"
 
@@ -15,7 +16,9 @@ static Expr *eval_value(Expr *e, Expr *env) {
     if (e->type == Expr_Cons) return eval_list(e, env);
     if (e->type == Expr_Label) {
         Expr *e2 = env_search(env, e->label);
-        if(!e2)  printf("Value not found: %s\n", e->label);
+        if(!e2)  {
+            printf("Value not found: %s\n", e->label);
+        }
         return e2;
     }
     return e;
@@ -58,6 +61,31 @@ static Expr *eval_list(Expr *e, Expr *env) {
         return eval_value(arg2->car, env2);
     }
 
+    if(str_eq(label, "quote")) {
+        return e->cdr;
+    }
+
+    if(str_eq(label, "do")) {
+        Expr *it = e->cdr;
+        Expr *ret = 0;
+        while(it) {
+            ret = eval_value(it->car, env);
+            it = it->cdr;
+        }
+        return ret;
+    }
+
+    if(str_eq(label, "print")) {
+        Expr *it = e->cdr;
+        while(it) {
+            pretty_value(eval_value(it->car, env));
+            printf(" ");
+            it = it->cdr;
+        }
+        printf("\n");
+        return 0;
+    }
+
     if(str_eq(label, "fn")) {
         return e;
     }
@@ -79,12 +107,12 @@ static Expr *eval_list(Expr *e, Expr *env) {
             if(arg_names == 0 && arg_values == 0) break;
 
             if(arg_names == 0) {
-                printf("Too many arguments");
+                printf("Too many arguments\n");
                 break;
             }
 
             if(arg_values == 0) {
-                printf("Missing arguments");
+                printf("Missing arguments\n");
                 break;
             }
 
