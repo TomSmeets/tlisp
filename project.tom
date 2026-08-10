@@ -1,0 +1,10 @@
+Name  tlisp
+Info  A simple lisp, just for fun
+State Active
+Type  Prog
+Tag   C
+Start 2026-08-10
+
+Todo Parse into AST
+Todo Evaluate
+Todo Repl
