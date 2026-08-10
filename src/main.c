@@ -233,6 +233,11 @@ static bool str_eq(char *a, char *b) {
 // ================
 // Eval
 // ================
+static Expr *eval_list(Expr *e);
+static Expr *eval_value(Expr *e) {
+    if(e->type == Expr_Cons) return eval_list(e);
+    return e;
+}
 static Expr *eval_list(Expr *e) {
     Expr *car = e->car;
     char *label = e->car->label;
@@ -241,11 +246,12 @@ static Expr *eval_list(Expr *e) {
         long sum = 0;
         Expr *it = e->cdr;
         while(it) {
-            if(it->car->type != Expr_Num) {
+            Expr *val =eval_value(it->car);
+            if (val->type != Expr_Num) {
                 printf("ERROR\n");
                 break;
             }
-            sum += it->car->num;
+            sum += val->num;
             it = it->cdr;
         }
         return expr_num(sum);
@@ -255,7 +261,7 @@ static Expr *eval_list(Expr *e) {
 }
 
 int main(void) {
-    const char code[] = "(+ 1 2 3 4  5)";
+    const char code[] = "(+ 1 2 (+ 1 2) (+ 2 2 2 -2)";
     printf("Code: %s\n", code);
 
     char *cursor = (char *)code;
