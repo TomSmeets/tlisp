@@ -22,7 +22,7 @@ static void pretty_list(Expr *e) {
     if (e == 0) return;
     pretty_value(e->car);
     if (e->cdr) {
-        if(e->cdr->type == Expr_Cons) {
+        if (e->cdr->type == Expr_Cons) {
             printf(" ");
             pretty_list(e->cdr);
         } else {

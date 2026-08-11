@@ -14,7 +14,7 @@ static char parse_peek(Parse *p) {
 
 // Return next char
 static char parse_peek2(Parse *p) {
-    if(!parse_peek(p)) return 0;
+    if (!parse_peek(p)) return 0;
     return p->cursor[1];
 }
 
@@ -37,16 +37,16 @@ static long parse_long(Parse *p) {
     bool negative = false;
     long num = 0;
 
-    if(parse_peek(p) == '-') {
+    if (parse_peek(p) == '-') {
         negative = true;
         parse_next(p);
-    } else if(parse_peek(p) == '+') {
+    } else if (parse_peek(p) == '+') {
         parse_next(p);
     }
 
-    for(;;) {
+    for (;;) {
         char c = parse_peek(p);
-        if(c == 0) break;
+        if (c == 0) break;
         if (!(c >= '0' && c <= '9')) break;
 
         num *= 10;
@@ -54,10 +54,9 @@ static long parse_long(Parse *p) {
         parse_next(p);
     }
 
-    if(negative) num = -num;
+    if (negative) num = -num;
     return num;
 }
-
 
 static Expr *parse_list(Parse *p);
 
@@ -123,4 +122,3 @@ static Expr *parse_list(Parse *p) {
     Expr *ret = expr_cons(car, cdr);
     return ret;
 }
-

@@ -1,18 +1,18 @@
-#pragma  once
+#pragma once
 #include "ast.h"
 #include "str.h"
 
 // Search the environment for a symbol
 static Expr *env_search(Expr *env, char *label) {
-    if(str_eq(label, "env")) return env;
+    if (str_eq(label, "env")) return env;
 
-    for(;;) {
-        if(env == 0) return 0;
+    for (;;) {
+        if (env == 0) return 0;
 
         // Pair
         Expr *key = env->car->car;
         Expr *val = env->car->cdr->car;
-        if(str_eq(key->label, label)) return val;
+        if (str_eq(key->label, label)) return val;
         env = env->cdr;
     }
 }

@@ -1,14 +1,13 @@
 // Evaluate tlisp expressions
 #pragma once
 #include "ast.h"
+#include "env.h"
 #include "pretty.h"
 #include "str.h"
-#include "env.h"
 
 // ================
 // Eval
 // ================
-
 
 static Expr *eval_list(Expr *e, Expr *env);
 
@@ -16,7 +15,7 @@ static Expr *eval_value(Expr *e, Expr *env) {
     if (e->type == Expr_Cons) return eval_list(e, env);
     if (e->type == Expr_Label) {
         Expr *e2 = env_search(env, e->label);
-        if(!e2)  {
+        if (!e2) {
             printf("Value not found: %s\n", e->label);
         }
         return e2;
@@ -25,11 +24,11 @@ static Expr *eval_value(Expr *e, Expr *env) {
 }
 static Expr *eval_list(Expr *e, Expr *env) {
     char *label = e->car->type == Expr_Label ? e->car->label : 0;
-    if(str_eq(label, "+")) {
+    if (str_eq(label, "+")) {
         long sum = 0;
         Expr *it = e->cdr;
-        while(it) {
-            Expr *val =eval_value(it->car, env);
+        while (it) {
+            Expr *val = eval_value(it->car, env);
             if (val->type != Expr_Num) {
                 printf("ERROR\n");
                 break;
@@ -40,7 +39,7 @@ static Expr *eval_list(Expr *e, Expr *env) {
         return expr_num(sum);
     }
 
-    if(str_eq(label, "let")) {
+    if (str_eq(label, "let")) {
         // Label
         Expr *arg0 = e->cdr;
 
@@ -50,8 +49,7 @@ static Expr *eval_list(Expr *e, Expr *env) {
         // Rest
         Expr *arg2 = arg1->cdr;
 
-
-        if(arg2->cdr != 0) {
+        if (arg2->cdr != 0) {
             printf("ERROR: Too many arguments\n");
         }
 
@@ -61,23 +59,23 @@ static Expr *eval_list(Expr *e, Expr *env) {
         return eval_value(arg2->car, env2);
     }
 
-    if(str_eq(label, "quote")) {
+    if (str_eq(label, "quote")) {
         return e->cdr;
     }
 
-    if(str_eq(label, "do")) {
+    if (str_eq(label, "do")) {
         Expr *it = e->cdr;
         Expr *ret = 0;
-        while(it) {
+        while (it) {
             ret = eval_value(it->car, env);
             it = it->cdr;
         }
         return ret;
     }
 
-    if(str_eq(label, "print")) {
+    if (str_eq(label, "print")) {
         Expr *it = e->cdr;
-        while(it) {
+        while (it) {
             pretty_value(eval_value(it->car, env));
             printf(" ");
             it = it->cdr;
@@ -86,7 +84,7 @@ static Expr *eval_list(Expr *e, Expr *env) {
         return 0;
     }
 
-    if(str_eq(label, "fn")) {
+    if (str_eq(label, "fn")) {
         return e;
     }
 
@@ -94,24 +92,24 @@ static Expr *eval_list(Expr *e, Expr *env) {
 
     // (X y . .)
     // (fn (x y z) (+ x y z))
-    if(str_eq(lam->car->label, "fn")) {
+    if (str_eq(lam->car->label, "fn")) {
         Expr *args = lam->cdr->car;
         Expr *body = lam->cdr->cdr->car;
-        if(lam->cdr->cdr->cdr != 0) printf("ERROR\n");
+        if (lam->cdr->cdr->cdr != 0) printf("ERROR\n");
 
         // Iterate over arguments and create a new env for the function body
         Expr *arg_values = e->cdr;
-        Expr *arg_names  = args;
+        Expr *arg_names = args;
         Expr *body_env = env;
-        for(;;) {
-            if(arg_names == 0 && arg_values == 0) break;
+        for (;;) {
+            if (arg_names == 0 && arg_values == 0) break;
 
-            if(arg_names == 0) {
+            if (arg_names == 0) {
                 printf("Too many arguments\n");
                 break;
             }
 
-            if(arg_values == 0) {
+            if (arg_values == 0) {
                 printf("Missing arguments\n");
                 break;
             }
