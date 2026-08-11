@@ -1,2 +1,15 @@
 #!/bin/sh
-clang -std=c23 -Wall -Werror -O0 -g src/main.c -o main -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-variable && ./main
+set -euo pipefail
+DIR=$PWD
+CMD="clang -std=c23 -Wall -Werror -O0 -g src/main.c -o main -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-variable"
+
+cat > compile_commands.json << EOF
+[{
+  "directory":"$PWD",
+  "command":"$CMD",
+  "file":"main.c"
+}]
+EOF
+
+$CMD
+./main

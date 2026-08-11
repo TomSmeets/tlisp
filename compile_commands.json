@@ -1,5 +1,0 @@
-[{
-  "directory":"/tom/prog/tlisp",
-  "command":"clang -std=c23 -Wall -Werror -Wno-unused-function -Wno-unused-variable -Wno-unused-but-set-variable -g -O0 -o out/main.elf main.c",
-  "file":"main.c"
-}]
