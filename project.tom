@@ -5,6 +5,7 @@ Type  Prog
 Tag   C
 Start 2026-08-10
 
-Todo Parse into AST
-Todo Evaluate
+Done Parse into AST
+Done Evaluate
 Todo Repl
+Todo GC
