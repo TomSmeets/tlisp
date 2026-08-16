@@ -3,7 +3,7 @@ set -euo pipefail
 DIR=$PWD
 CMD="clang -std=c23 -Wall -Werror -O0 -g src/main.c -o main -Wno-unused-function -Wno-unused-but-set-variable -Wno-unused-variable"
 
-clang-format -i src/*.h src/*.c
+# clang-format -i src/*.h src/*.c
 
 cat > compile_commands.json << EOF
 [{

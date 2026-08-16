@@ -8,9 +8,11 @@ static void pretty_value(Expr *e) {
     if (e == 0) {
         printf("()");
     } else if (e->type == Expr_Label) {
-        printf("%s", e->label);
-    } else if (e->type == Expr_Num) {
-        printf("%ld", e->num);
+        char label[13];
+        expr_get_label(e, label);
+        printf("%s", label);
+    } else if (e->type == Expr_Integer) {
+        printf("%ld", expr_get_int(e));
     } else if (e->type == Expr_Cons) {
         printf("(");
         pretty_list(e);
@@ -19,15 +21,17 @@ static void pretty_value(Expr *e) {
 }
 
 static void pretty_list(Expr *e) {
-    if (e == 0) return;
-    pretty_value(e->car);
-    if (e->cdr) {
-        if (e->cdr->type == Expr_Cons) {
-            printf(" ");
-            pretty_list(e->cdr);
-        } else {
-            printf(" . ");
-            pretty_value(e->cdr);
-        }
+    Expr *car = expr_car(e);
+    Expr *cdr = expr_cdr(e);
+
+    pretty_value(car);
+    if (!e->cdr) return;
+
+    if (expr_type(cdr) == Expr_Cons) {
+        printf(" ");
+        pretty_list(cdr);
+    } else {
+        printf(" . ");
+        pretty_value(cdr);
     }
 }

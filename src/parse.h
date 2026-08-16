@@ -12,12 +12,6 @@ static char parse_peek(Parse *p) {
     return p->cursor[0];
 }
 
-// Return next char
-static char parse_peek2(Parse *p) {
-    if (!parse_peek(p)) return 0;
-    return p->cursor[1];
-}
-
 // Advance to next char
 static void parse_next(Parse *p) {
     p->cursor++;
@@ -48,7 +42,6 @@ static long parse_long(Parse *p) {
         char c = parse_peek(p);
         if (c == 0) break;
         if (!(c >= '0' && c <= '9')) break;
-
         num *= 10;
         num += c - '0';
         parse_next(p);
@@ -63,9 +56,7 @@ static Expr *parse_list(Parse *p);
 static Expr *parse_value(Parse *p) {
     // Skip any whitespace
     parse_whitespace(p);
-
     char c = parse_peek(p);
-    char c2 = parse_peek2(p);
 
     if (c == '(') {
         parse_next(p);
@@ -76,8 +67,8 @@ static Expr *parse_value(Parse *p) {
         return 0;
     }
 
-    if ((c >= '0' && c <= '9') || ((c == '-' || c == '+') && (c2 >= '0' && c2 <= '9'))) {
-        return expr_num(parse_long(p));
+    if ((c >= '0' && c <= '9') || (c == '-' || c == '+')) {
+        return expr_int(parse_long(p));
     }
 
     char *expr_start = p->cursor;
@@ -121,4 +112,9 @@ static Expr *parse_list(Parse *p) {
     Expr *cdr = parse_list(p);
     Expr *ret = expr_cons(car, cdr);
     return ret;
+}
+
+static Expr *parse(char *input) {
+    Parse p = {.cursor = input};
+    return parse_value(&p);
 }
