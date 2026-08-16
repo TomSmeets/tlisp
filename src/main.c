@@ -7,7 +7,7 @@ int main(void) {
     FILE *f = fopen("src/input.lisp", "r");
     heap_used = fread(heap_data, 1, sizeof(heap_data), f);
     heap_data[heap_used++] = 0;
-    char *source = (char*)&heap_data[0];
+    char *source = (char *)&heap_data[0];
 
     printf("Source: %s\n", source);
     Expr *p = parse(source);

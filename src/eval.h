@@ -9,7 +9,6 @@
 // Eval
 // ================
 
-
 // A pair of value and environment
 typedef struct {
     Expr *value;
@@ -17,7 +16,7 @@ typedef struct {
 } Scope;
 
 static Scope scope(Expr *value, Expr *env) {
-    return (Scope){value,env};
+    return (Scope){value, env};
 }
 
 static Scope eval_list(Scope s);
@@ -60,7 +59,7 @@ static Scope eval_add(Scope s) {
     long sum = 0;
     Expr *car = expr_car(s.value);
     Expr *cdr = expr_cdr(s.value);
-    while(cdr) {
+    while (cdr) {
         car = expr_car(cdr);
         cdr = expr_cdr(cdr);
         sum += expr_get_int(eval_value(scope(car, s.env)).value);
@@ -82,7 +81,7 @@ static Scope eval_do(Scope s) {
     Expr *cdr = expr_cdr(s.value);
     Expr *ret = 0;
     Expr *env = s.env;
-    while(cdr) {
+    while (cdr) {
         Expr *car = expr_car(cdr);
         Scope rets = eval_value(scope(car, env));
         env = rets.env;
@@ -106,7 +105,7 @@ static Scope eval_env_set(Scope s) {
 // Set environment
 static Scope eval_print(Scope s) {
     Expr *cdr = expr_cdr(s.value);
-    while(cdr) {
+    while (cdr) {
         Expr *car = expr_car(cdr);
         car = eval_value(scope(car, s.env)).value;
         pretty_value(car);
