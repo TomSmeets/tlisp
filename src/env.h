@@ -10,12 +10,12 @@ static Expr *env_search(Expr *env, Expr *label) {
         Expr *pair = expr_car(env);
         Expr *next = expr_cdr(env);
         Expr *key = expr_car(pair);
-        Expr *val = expr_cdr(pair);
+        Expr *val = expr_car(expr_cdr(pair));
         if (expr_eq(key, label)) return val;
         env = next;
     }
 }
 
 static Expr *env_add(Expr *env, Expr *key, Expr *value) {
-    return expr_cons(expr_cons(key, value), env);
+    return expr_cons(expr_cons(key, expr_cons(value, 0)), env);
 }

@@ -1,13 +1,8 @@
-(let thing
-  (fn (x y) (print x y))
-  (let four 4
-    (let five (+ 4 1)
-      (do
-        (thing 1 2)
-        (thing four five)
-        (print (quote Thing is) thing)
-        (print (quote Env is) env)
-      )
-    )
-  )
+(do
+  (let four 4)
+  (let five (add four 1))
+  (print four five)
+  (env! ((four 1) (five 2)))
+  (print four five)
+  (env?)
 )

@@ -20,7 +20,7 @@ static void test_parse(char *input, Expr *expect) {
 static void test_eval(char *input, char *expect) {
     Expr *input_exp = parse(input);
     Expr *expect_exp = parse(expect);
-    Expr *eval = eval_value(input_exp, 0);
+    Expr *eval = eval_value(scope(input_exp, 0)).value;
     if (!expr_eq(eval, expect_exp)) {
         printf("FAIL:\n");
         printf("  Input:  %s\n", input);
@@ -49,6 +49,6 @@ static void test(void) {
     test_eval("(add (add 1 2) 3 (add 4 5 6) 7)", "28");
     test_eval("(quote (add 1 2))", "(add 1 2)");
     test_eval("(1 . 2)", "(1 . 2)");
-    test_eval("(let x 5 x)", "5");
-    test_eval("(let x 2 (let y -1 (add x x y y)))", "2");
+    test_eval("(do (let x 5) x)", "5");
+    test_eval("(do (let x 2) (let y -1) (add x x y y))", "2");
 }

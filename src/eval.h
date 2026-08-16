@@ -9,95 +9,127 @@
 // Eval
 // ================
 
-static Expr *eval_list(Expr *e, Expr *env);
 
-static Expr *eval_value(Expr *e, Expr *env) {
-    if (!e) return 0;
+// A pair of value and environment
+typedef struct {
+    Expr *value;
+    Expr *env;
+} Scope;
 
-    Expr_Type type = expr_type(e);
-    if (type == Expr_Cons) return eval_list(e, env);
-    if (type == Expr_Label) {
-        Expr *e2 = env_search(env, e);
-        if (!e2) {
-            printf("Value not found: ");
-            printf("Label = ");
-            pretty_value(e);
-            printf("\n");
-            printf("Env = ");
-            pretty_value(env);
-            printf("\n");
-        }
-        return e2;
-    }
-    return e;
+static Scope scope(Expr *value, Expr *env) {
+    return (Scope){value,env};
 }
 
-static Expr *eval_list(Expr *e, Expr *env) {
-    Expr_Type type = expr_type(e);
+static Scope eval_list(Scope s);
 
-    Expr *car = expr_car(e);
-    Expr *cdr = expr_cdr(e);
+static Scope eval_value(Scope s) {
+    // Nil
+    if (!s.value) return s;
 
-    if (expr_eq(car, expr_label("add"))) {
-        long sum = 0;
-        Expr *it = cdr;
-        while (it) {
-            car = expr_car(it);
-            cdr = expr_cdr(it);
-            Expr *val = eval_value(car, env);
-            if (val->type != Expr_Integer) {
-                printf("ERROR, expected a number, got:");
-                pretty_value(val);
-                printf("\n");
-                break;
-            }
-            sum += expr_get_int(val);
-            it = cdr;
+    Expr_Type type = expr_type(s.value);
+
+    // Cons
+    if (type == Expr_Cons) return eval_list(s);
+
+    // Deref label
+    if (type == Expr_Label) {
+        Expr *value2 = env_search(s.env, s.value);
+        if (!value2) {
+            printf("Value not found: ");
+            printf("Label = ");
+            pretty_value(s.value);
+            printf("\n");
+            printf("Env = ");
+            pretty_value(s.env);
+            printf("\n");
         }
-        return expr_int(sum);
+        return scope(value2, s.env);
     }
+    return s;
+}
 
-    if (expr_eq(car, expr_label("quote"))) {
-        return expr_car(cdr);
-    }
+// Return argument without evaluating
+static Scope eval_quote(Scope s) {
+    Expr *car = expr_car(s.value);
+    Expr *cdr = expr_cdr(s.value);
+    return scope(expr_car(cdr), s.env);
+}
 
-    if (expr_eq(car, expr_label("let"))) {
-        Expr *name = expr_car(cdr);
+// Sum all arguments
+static Scope eval_add(Scope s) {
+    long sum = 0;
+    Expr *car = expr_car(s.value);
+    Expr *cdr = expr_cdr(s.value);
+    while(cdr) {
+        car = expr_car(cdr);
         cdr = expr_cdr(cdr);
-        Expr *value = expr_car(cdr);
-        cdr = expr_cdr(cdr);
-        Expr *rest = expr_car(cdr);
-        cdr = expr_cdr(cdr);
-
-        if (cdr != 0) {
-            printf("ERROR: Too many arguments\n");
-            return 0;
-        }
-
-        value = eval_value(value, env);
-        Expr *env2 = env_add(env, name, value);
-        return eval_value(rest, env2);
+        sum += expr_get_int(eval_value(scope(car, s.env)).value);
     }
+    return scope(expr_int(sum), s.env);
+}
 
-    // if (str_eq(label, "do")) {
-    //     Expr *it = e->cdr;
-    //     Expr *ret = 0;
-    //     while (it) {
-    //         ret = eval_value(it->car, env);
-    //         it = it->cdr;
-    //     }
-    //     return ret;
-    // }
+static Scope eval_let(Scope s) {
+    Expr *cdr = expr_cdr(s.value);
+    Expr *key = expr_car(cdr);
+    cdr = expr_cdr(cdr);
+    Expr *value = expr_car(cdr);
+    cdr = expr_cdr(cdr);
+    Expr *env2 = env_add(s.env, key, eval_value(scope(value, s.env)).value);
+    return scope(0, env2);
+}
 
-    if (expr_eq(car, expr_label("print"))) {
-        while (cdr) {
-            pretty_value(eval_value(expr_car(cdr), env));
-            printf(" ");
-            cdr = expr_cdr(cdr);
-        }
-        printf("\n");
-        return 0;
+static Scope eval_do(Scope s) {
+    Expr *cdr = expr_cdr(s.value);
+    Expr *ret = 0;
+    Expr *env = s.env;
+    while(cdr) {
+        Expr *car = expr_car(cdr);
+        Scope rets = eval_value(scope(car, env));
+        env = rets.env;
+        ret = rets.value;
+        cdr = expr_cdr(cdr);
     }
+    return scope(ret, s.env);
+}
+
+// Get environment
+static Scope eval_env_get(Scope s) {
+    return scope(s.env, s.env);
+}
+
+// Set environment
+static Scope eval_env_set(Scope s) {
+    Expr *car = expr_car(expr_cdr(s.value));
+    return scope(0, car);
+}
+
+// Set environment
+static Scope eval_print(Scope s) {
+    Expr *cdr = expr_cdr(s.value);
+    while(cdr) {
+        Expr *car = expr_car(cdr);
+        car = eval_value(scope(car, s.env)).value;
+        pretty_value(car);
+        printf(" ");
+        cdr = expr_cdr(cdr);
+    }
+    printf("\n");
+    return scope(0, s.env);
+}
+
+static Scope eval_list(Scope s) {
+    Expr_Type type = expr_type(s.value);
+    Expr *car = expr_car(s.value);
+    Expr *cdr = expr_cdr(s.value);
+
+    if (expr_eq(car, expr_label("add"))) return eval_add(s);
+    if (expr_eq(car, expr_label("quote"))) return eval_quote(s);
+    if (expr_eq(car, expr_label("do"))) return eval_do(s);
+    if (expr_eq(car, expr_label("let"))) return eval_let(s);
+    if (expr_eq(car, expr_label("print"))) return eval_print(s);
+    if (expr_eq(car, expr_label("fn"))) return s;
+    if (expr_eq(car, expr_label("env?"))) return eval_env_get(s);
+    if (expr_eq(car, expr_label("env!"))) return eval_env_set(s);
 
     // if (str_eq(label, "fn")) {
     //     return e;
@@ -138,5 +170,6 @@ static Expr *eval_list(Expr *e, Expr *env) {
     //     return result;
     // }
 
-    return e;
+    // return e;
+    return s;
 }

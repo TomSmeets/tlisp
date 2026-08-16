@@ -6,6 +6,7 @@ typedef enum {
     Expr_Cons,
     Expr_Label,
     Expr_Integer,
+    Expr_Builtin,
 } Expr_Type;
 
 typedef struct {
