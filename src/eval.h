@@ -1,9 +1,11 @@
 // Evaluate tlisp expressions
 #pragma once
 #include "ast.h"
+#include "error.h"
 #include "env.h"
 #include "pretty.h"
 #include "str.h"
+#include <assert.h>
 
 // ================
 // Eval
@@ -91,6 +93,52 @@ static Scope eval_do(Scope s) {
     return scope(ret, s.env);
 }
 
+static Expr *eval_builtin_list2(Expr *expr, Expr *env) {
+    if(!expr) return expr;
+
+    if (expr_type(expr) == Expr_Cons) {
+        Expr *car = eval_value(scope(expr_car(expr), env)).value;
+        Expr *cdr = expr_cdr(expr);
+        return expr_cons(car, eval_builtin_list2(cdr, env));
+    } else {
+        return eval_value(scope(expr, env)).value;
+    }
+}
+
+static Scope eval_builtin_list(Scope s) {
+    return scope(eval_builtin_list2(expr_cdr(s.value), s.env), s.env);
+}
+
+static Expr *eval_builtin_cons(Expr *value, Expr *env) {
+    // Drop keyword
+    value = expr_cdr(value);
+    Expr *arg1 = expr_car(value);
+    value = expr_cdr(value);
+    Expr *arg2 = expr_car(value);
+    value = expr_cdr(value);
+    assert(value == 0);
+    return expr_cons(eval_value(scope(arg1, env)).value, eval_value(scope(arg2, env)).value);
+}
+
+static Expr *eval_builtin_car(Expr *value, Expr *env) {
+    // Drop keyword
+    value = expr_cdr(value);
+    Expr *arg1 = eval_value(scope(expr_car(value), env)).value;
+    value = expr_cdr(value);
+    assert(value == 0);
+    return expr_car(arg1);
+}
+
+
+static Expr *eval_builtin_cdr(Expr *value, Expr *env) {
+    // Drop keyword
+    value = expr_cdr(value);
+    Expr *arg1 = eval_value(scope(expr_car(value), env)).value;
+    value = expr_cdr(value);
+    assert(value == 0);
+    return expr_cdr(arg1);
+}
+
 // Get environment
 static Scope eval_env_get(Scope s) {
     return scope(s.env, s.env);
@@ -116,58 +164,74 @@ static Scope eval_print(Scope s) {
     return scope(0, s.env);
 }
 
+// Set environment
+static Scope eval_fn(Scope s) {
+    Expr *exp = s.value;
+
+    Expr *label = expr_car(s.value);
+    Expr *rest  = expr_cdr(s.value);
+
+    // Add env between fn keyword and the rest
+    return scope(expr_cons(label, expr_cons(s.env, rest)), s.env);
+}
+
 static Scope eval_list(Scope s) {
     Expr_Type type = expr_type(s.value);
+    assert(type == Expr_Cons);
+
     Expr *car = expr_car(s.value);
     Expr *cdr = expr_cdr(s.value);
+    assert(car);
 
+    // Builtin
     if (expr_eq(car, expr_label("add"))) return eval_add(s);
     if (expr_eq(car, expr_label("quote"))) return eval_quote(s);
+    if (expr_eq(car, expr_label("list"))) return eval_builtin_list(s);
+    if (expr_eq(car, expr_label("cons"))) return scope(eval_builtin_cons(s.value, s.env), s.env);
+    if (expr_eq(car, expr_label("car"))) return scope(eval_builtin_car(s.value, s.env), s.env);
+    if (expr_eq(car, expr_label("cdr"))) return scope(eval_builtin_cdr(s.value, s.env), s.env);
     if (expr_eq(car, expr_label("do"))) return eval_do(s);
     if (expr_eq(car, expr_label("let"))) return eval_let(s);
     if (expr_eq(car, expr_label("print"))) return eval_print(s);
-    if (expr_eq(car, expr_label("fn"))) return s;
+    if (expr_eq(car, expr_label("fn"))) return eval_fn(s);
     if (expr_eq(car, expr_label("env?"))) return eval_env_get(s);
     if (expr_eq(car, expr_label("env!"))) return eval_env_set(s);
 
-    // if (str_eq(label, "fn")) {
-    //     return e;
-    // }
-
-    // Expr *lam = eval_value(e->car, env);
-
+    // Eval
     // // (X y . .)
     // // (fn (x y z) (+ x y z))
-    // if (str_eq(lam->car->label, "fn")) {
-    //     Expr *args = lam->cdr->car;
-    //     Expr *body = lam->cdr->cdr->car;
-    //     if (lam->cdr->cdr->cdr != 0) printf("ERROR\n");
+    Expr *lam = eval_value(scope(car, s.env)).value;
+    if (expr_eq(expr_car(lam), expr_label("fn"))) {
+        lam = expr_cdr(lam);
+        Expr *body_env = expr_car(lam);
+        lam = expr_cdr(lam);
+        Expr *args = expr_car(lam);
+        lam = expr_cdr(lam);
+        Expr *body = expr_car(lam);
+        lam = expr_cdr(lam);
+        assert(lam == 0);
 
-    //     // Iterate over arguments and create a new env for the function body
-    //     Expr *arg_values = e->cdr;
-    //     Expr *arg_names = args;
-    //     Expr *body_env = env;
-    //     for (;;) {
-    //         if (arg_names == 0 && arg_values == 0) break;
+        // Iterate over arguments and create a new env for the function body
+        Expr *arg_values = cdr;
+        Expr *arg_names = args;
 
-    //         if (arg_names == 0) {
-    //             printf("Too many arguments\n");
-    //             break;
-    //         }
+        for (;;) {
+            if (arg_names == 0 && arg_values == 0) break;
+            assert(arg_names != 0);
+            assert(arg_values != 0);
 
-    //         if (arg_values == 0) {
-    //             printf("Missing arguments\n");
-    //             break;
-    //         }
+            Expr *arg_name = expr_car(arg_names);
+            assert(expr_type(arg_name) == Expr_Label);
 
-    //         body_env = env_add(body_env, arg_names->car, eval_value(arg_values->car, env));
-    //         arg_names = arg_names->cdr;
-    //         arg_values = arg_values->cdr;
-    //     }
+            Expr *arg_value = eval_value(scope(expr_car(arg_values), s.env)).value;
+            body_env = env_add(body_env, arg_name, arg_value);
+            arg_names = expr_cdr(arg_names);
+            arg_values = expr_cdr(arg_values);
+        }
 
-    //     Expr *result = eval_value(body, body_env);
-    //     return result;
-    // }
+        Expr *result = eval_value(scope(body, body_env)).value;
+        return scope(result, s.env);
+    }
 
     // return e;
     return s;
