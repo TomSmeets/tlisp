@@ -1,8 +1,8 @@
 // Evaluate tlisp expressions
 #pragma once
 #include "ast.h"
-#include "error.h"
 #include "env.h"
+#include "error.h"
 #include "pretty.h"
 #include "str.h"
 #include <assert.h>
@@ -94,7 +94,7 @@ static Scope eval_do(Scope s) {
 }
 
 static Expr *eval_builtin_list2(Expr *expr, Expr *env) {
-    if(!expr) return expr;
+    if (!expr) return expr;
 
     if (expr_type(expr) == Expr_Cons) {
         Expr *car = eval_value(scope(expr_car(expr), env)).value;
@@ -128,7 +128,6 @@ static Expr *eval_builtin_car(Expr *value, Expr *env) {
     assert(value == 0);
     return expr_car(arg1);
 }
-
 
 static Expr *eval_builtin_cdr(Expr *value, Expr *env) {
     // Drop keyword
@@ -169,7 +168,7 @@ static Scope eval_fn(Scope s) {
     Expr *exp = s.value;
 
     Expr *label = expr_car(s.value);
-    Expr *rest  = expr_cdr(s.value);
+    Expr *rest = expr_cdr(s.value);
 
     // Add env between fn keyword and the rest
     return scope(expr_cons(label, expr_cons(s.env, rest)), s.env);
