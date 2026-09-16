@@ -20,5 +20,15 @@ static void *mem_alloc(size_t size) {
     return mem_alloc_x(size, 1, false);
 }
 
+// Allocate unaligned memory
+static void mem_reset(void *ptr) {
+    heap_used = (intptr_t)ptr - (intptr_t)heap_data;
+}
+
+// Number of bytes remaining
+static size_t mem_remaining(void) {
+    return sizeof(heap_data) - heap_used;
+}
+
 // Allocate a struct with correct alignment and init to zero
 #define mem_struct(T) (T *)mem_alloc_x(sizeof(T), alignof(T), true)

@@ -51,9 +51,9 @@ static long parse_long(Parse *p) {
     return num;
 }
 
-static Expr *parse_list(Parse *p);
+static u32 parse_list(Parse *p);
 
-static Expr *parse_value(Parse *p) {
+static u32 parse_value(Parse *p) {
     // Skip any whitespace
     parse_whitespace(p);
     char c = parse_peek(p);
@@ -68,7 +68,7 @@ static Expr *parse_value(Parse *p) {
     }
 
     if ((c >= '0' && c <= '9') || (c == '-' || c == '+')) {
-        return expr_int(parse_long(p));
+        return expr_value(parse_long(p));
     }
 
     char *expr_start = p->cursor;
@@ -82,15 +82,11 @@ static Expr *parse_value(Parse *p) {
         parse_next(p);
     }
     char *expr_end = p->cursor;
-    char *label = str_dup(expr_end - expr_start, expr_start);
-    return expr_label(label);
+    return expr_bytes(expr_end - expr_start, (u8 *)expr_start);
 }
 
 // Returns a list
-static Expr *parse_list(Parse *p) {
-    Expr *list = 0;
-    Expr *last = 0;
-
+static u32 parse_list(Parse *p) {
     parse_whitespace(p);
     char c = parse_peek(p);
 
@@ -108,13 +104,14 @@ static Expr *parse_list(Parse *p) {
     if (c == '\0') {
         return 0;
     }
-    Expr *car = parse_value(p);
-    Expr *cdr = parse_list(p);
-    Expr *ret = expr_cons(car, cdr);
+
+    u32 car = parse_value(p);
+    u32 cdr = parse_list(p);
+    u32 ret = expr_cons(car, cdr);
     return ret;
 }
 
-static Expr *parse(char *input) {
+static u32 parse(char *input) {
     Parse p = {.cursor = input};
-    return parse_value(&p);
+    return expr_cons(expr_str("do"), parse_list(&p));
 }
