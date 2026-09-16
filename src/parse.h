@@ -19,9 +19,12 @@ static void parse_next(Parse *p) {
 
 // Consume any number of whitespace chars
 static void parse_whitespace(Parse *p) {
+    bool comment = false;
     for (;;) {
         char c = parse_peek(p);
-        if (c != ' ' && c != '\n') break;
+        if (c == ';') comment = true;
+        if (c == '\n') comment = false;
+        if (!comment && c != ' ' && c != '\n') break;
         parse_next(p);
     }
 }
