@@ -192,6 +192,7 @@ static Expr eval_list(Expr *env, Expr list) {
         if(value == EXPR_CAR) return eval_car(env, args);
         if(value == EXPR_CDR) return eval_cdr(env, args);
         if(value == EXPR_DO) return eval_do(env, args);
+        if(value == EXPR_CONS) return eval_cons(env, args);
         if(value == EXPR_LET) return eval_let(env, args);
 
         // ???
