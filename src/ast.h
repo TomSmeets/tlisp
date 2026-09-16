@@ -61,12 +61,12 @@ static Expr expr_str(char *str) {
 static bool expr_eq(Expr a, Expr b) {
     if (a == b) return true;
     Expr_Type type = expr_get_type(a);
-    if(expr_get_type(a) != expr_get_type(b)) return false;
+    if (expr_get_type(a) != expr_get_type(b)) return false;
     if (type == Expr_Nil) {
         return true;
     } else if (type == Expr_Cons) {
-        if(!expr_eq(expr_get_car(a), expr_get_car(b))) return false;
-        if(!expr_eq(expr_get_cdr(a), expr_get_cdr(b))) return false;
+        if (!expr_eq(expr_get_car(a), expr_get_car(b))) return false;
+        if (!expr_eq(expr_get_cdr(a), expr_get_cdr(b))) return false;
         return true;
     } else {
         return expr_get_value(a) == expr_get_value(b);
@@ -79,21 +79,22 @@ typedef struct {
     u8 mark;
     u8 type;
     union {
-        struct { Expr car, cdr; };
+        struct {
+            Expr car, cdr;
+        };
         i64 value;
     };
 } Expr_Int;
 
-
 static u32 expr_count = 1;
-static Expr expr_freelist  = 0;
-static Expr_Int expr_heap[1024*64];
+static Expr expr_freelist = 0;
+static Expr_Int expr_heap[1024 * 64];
 
 static Expr expr_alloc(Expr_Type type) {
-    if(type == Expr_Nil) return 0;
+    if (type == Expr_Nil) return 0;
 
     Expr ix;
-    if(expr_freelist == 0) {
+    if (expr_freelist == 0) {
         assert(expr_count < array_count(expr_heap));
         ix = expr_count++;
     } else {
@@ -117,7 +118,7 @@ static void expr_free(Expr ptr) {
 }
 
 static Expr_Type expr_get_type(Expr ptr) {
-    if(ptr == 0) return Expr_Nil;
+    if (ptr == 0) return Expr_Nil;
     return expr_heap[ptr].type;
 }
 
@@ -137,7 +138,7 @@ static i64 expr_get_value(Expr ptr) {
 }
 
 static bool expr_get_mark(Expr ptr) {
-     return expr_heap[ptr].mark;
+    return expr_heap[ptr].mark;
 }
 
 static void expr_set_car(Expr ptr, Expr car) {
@@ -152,14 +153,12 @@ static void expr_set_cdr(Expr ptr, Expr cdr) {
 
 static void expr_set_val(Expr ptr, i64 value) {
     assert(expr_get_type(ptr) == Expr_Value);
-     expr_heap[ptr].value = value;
+    expr_heap[ptr].value = value;
 }
-
 
 static void expr_set_mark(Expr ptr, bool mark) {
-     expr_heap[ptr].mark = mark;
+    expr_heap[ptr].mark = mark;
 }
-
 
 // GC
 static void expr_mark(Expr expr) {
@@ -189,4 +188,3 @@ static void expr_sweep(void) {
         expr_free(ptr);
     }
 }
-

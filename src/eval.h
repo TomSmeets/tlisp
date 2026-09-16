@@ -16,7 +16,6 @@ typedef struct {
     Expr env;
 } Scope;
 
-
 typedef enum {
     EXPR_QUOTE = 10000,
     EXPR_ADD,
@@ -110,7 +109,6 @@ static Expr eval_cons(Expr *env, Expr args) {
     return expr_cons(arg1, arg2);
 }
 
-
 static Expr eval_car(Expr *env, Expr args) {
     Expr arg1 = eval_value(env, expr_get_car(args));
     args = expr_get_cdr(args);
@@ -156,7 +154,7 @@ static Expr eval_value(Expr *env, Expr value) {
     // - So it's either function application, or a label
     // - Label: (N ...) -> N is number and < 1000
     // - otherwise pass to eval_list
-    // 
+    //
     // - eval_value(builtin) is not possible
 
     // Any value
@@ -164,10 +162,10 @@ static Expr eval_value(Expr *env, Expr value) {
 
     // Label
     Expr car = expr_get_car(value);
-    if(expr_get_type(car) == Expr_Value && expr_get_value(car) < 1000) {
+    if (expr_get_type(car) == Expr_Value && expr_get_value(car) < 1000) {
         return env_search(*env, value);
     }
-    
+
     // Function application
     return eval_list(env, value);
 }
@@ -184,16 +182,16 @@ static Expr eval_list(Expr *env, Expr list) {
     Expr args = expr_get_cdr(list);
 
     // Should be either a builtin, represented by a number: (123 ..)
-    if(expr_get_type(name) == Expr_Value) {
+    if (expr_get_type(name) == Expr_Value) {
         i64 value = expr_get_value(name);
         printf("BUILTIN: %ld\n", value);
-        if(value == EXPR_ADD) return eval_add(env, args);
-        if(value == EXPR_QUOTE) return eval_quote(env, args);
-        if(value == EXPR_CAR) return eval_car(env, args);
-        if(value == EXPR_CDR) return eval_cdr(env, args);
-        if(value == EXPR_DO) return eval_do(env, args);
-        if(value == EXPR_CONS) return eval_cons(env, args);
-        if(value == EXPR_LET) return eval_let(env, args);
+        if (value == EXPR_ADD) return eval_add(env, args);
+        if (value == EXPR_QUOTE) return eval_quote(env, args);
+        if (value == EXPR_CAR) return eval_car(env, args);
+        if (value == EXPR_CDR) return eval_cdr(env, args);
+        if (value == EXPR_DO) return eval_do(env, args);
+        if (value == EXPR_CONS) return eval_cons(env, args);
+        if (value == EXPR_LET) return eval_let(env, args);
 
         // ???
         assert(false);
@@ -220,7 +218,7 @@ static Expr eval_list(Expr *env, Expr list) {
         return 0;
     }
 
-    // // or a lambda 
+    // // or a lambda
     // // // ((fn (x y z) (+ x y z)) ... )
     // assert(expr_get_type(car) == Expr_Cons) {
     // Expr fn = expr_get_car(car);

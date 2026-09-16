@@ -6,14 +6,14 @@ static void pretty_list(Expr e);
 
 static bool is_string(Expr e) {
     Expr_Type t = expr_get_type(e);
-    if(t == Expr_Nil) return true;
-    if(t != Expr_Cons) return false;
+    if (t == Expr_Nil) return true;
+    if (t != Expr_Cons) return false;
 
     Expr car = expr_get_car(e);
     if (expr_get_type(car) != Expr_Value) return false;
 
     i64 val = expr_get_value(car);
-    if(!(val >= ' ' && val <= '~')) return false;
+    if (!(val >= ' ' && val <= '~')) return false;
 
     Expr cdr = expr_get_cdr(e);
     return is_string(cdr);
@@ -48,7 +48,7 @@ static void pretty_list(Expr e) {
     pretty_value(car);
 
     Expr_Type t = expr_get_type(cdr);
-    if(t == Expr_Nil) {
+    if (t == Expr_Nil) {
         return;
     } else if (t == Expr_Cons) {
         printf(" ");
@@ -58,4 +58,3 @@ static void pretty_list(Expr e) {
         pretty_value(cdr);
     }
 }
-
