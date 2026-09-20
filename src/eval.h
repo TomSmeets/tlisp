@@ -16,36 +16,6 @@ typedef struct {
     Expr env;
 } Scope;
 
-typedef enum {
-    EXPR_QUOTE = 10000,
-    EXPR_ADD,
-    EXPR_FN,
-    EXPR_LET,
-    EXPR_DO,
-    EXPR_LIST,
-    EXPR_CONS,
-    EXPR_CAR,
-    EXPR_CDR,
-    EXPR_IS_NIL,
-    EXPR_IS_CONS,
-    EXPR_PRINT,
-} Builtin_t;
-
-static void eval_add_builtins(Expr *env) {
-    env_add(env, expr_str("add"), expr_value(EXPR_ADD));
-    env_add(env, expr_str("quote"), expr_value(EXPR_QUOTE));
-    env_add(env, expr_str("fn"), expr_value(EXPR_FN));
-    env_add(env, expr_str("let"), expr_value(EXPR_LET));
-    env_add(env, expr_str("do"), expr_value(EXPR_DO));
-    env_add(env, expr_str("list"), expr_value(EXPR_LIST));
-    env_add(env, expr_str("cons"), expr_value(EXPR_CONS));
-    env_add(env, expr_str("car"), expr_value(EXPR_CAR));
-    env_add(env, expr_str("cdr"), expr_value(EXPR_CDR));
-    env_add(env, expr_str("nil?"), expr_value(EXPR_IS_NIL));
-    env_add(env, expr_str("cons?"), expr_value(EXPR_IS_CONS));
-    env_add(env, expr_str("print"), expr_value(EXPR_PRINT));
-}
-
 static Expr eval_value(Expr *env, Expr value);
 static Expr eval_list(Expr *env, Expr list);
 
@@ -149,22 +119,29 @@ static Expr eval_print(Expr *env, Expr args) {
     return 0;
 }
 
-static Expr eval_value(Expr *env, Expr value) {
-    // Builtin is not possible to eval, it should never be reached
-    // - So it's either function application, or a label
-    // - Label: (N ...) -> N is number and < 1000
-    // - otherwise pass to eval_list
-    //
-    // - eval_value(builtin) is not possible
+static void eval_add_builtins(Expr *env) {
+    env_add(env, expr_str("quote"), expr_builtin(eval_quote));
+    env_add(env, expr_str("add"), expr_builtin(eval_add));
+    env_add(env, expr_str("let"),   expr_builtin(eval_let));
+    env_add(env, expr_str("do"),    expr_builtin(eval_do));
+    env_add(env, expr_str("cons"),  expr_builtin(eval_cons));
+    env_add(env, expr_str("car"),   expr_builtin(eval_car));
+    env_add(env, expr_str("cdr"),   expr_builtin(eval_cdr));
+    env_add(env, expr_str("env?"),   expr_builtin(eval_env_get));
+    env_add(env, expr_str("env!"), expr_builtin(eval_env_set));
+    env_add(env, expr_str("print"), expr_builtin(eval_print));
+    // env_add(env, expr_str("nil?"),  expr_builtin(eval_is_nil));
+    // env_add(env, expr_str("fn"),    expr_builtin(eval_fn));
+    // env_add(env, expr_str("cons?"), expr_builtin(eval_is_cons));
+}
 
-    // Any value
+static Expr eval_value(Expr *env, Expr value) {
+    // nil / value / builtin
     if (expr_get_type(value) != Expr_Cons) return value;
 
     // Label
-    Expr car = expr_get_car(value);
-    if (expr_get_type(car) == Expr_Value && expr_get_value(car) < 1000) {
-        return env_search(*env, value);
-    }
+    bool error = false;
+    if (env_search(*env, value, &value)) return value;
 
     // Function application
     return eval_list(env, value);
@@ -182,37 +159,25 @@ static Expr eval_list(Expr *env, Expr list) {
     Expr args = expr_get_cdr(list);
 
     // Should be either a builtin, represented by a number: (123 ..)
-    if (expr_get_type(name) == Expr_Value) {
-        i64 value = expr_get_value(name);
-        printf("BUILTIN: %ld\n", value);
-        if (value == EXPR_ADD) return eval_add(env, args);
-        if (value == EXPR_QUOTE) return eval_quote(env, args);
-        if (value == EXPR_CAR) return eval_car(env, args);
-        if (value == EXPR_CDR) return eval_cdr(env, args);
-        if (value == EXPR_DO) return eval_do(env, args);
-        if (value == EXPR_CONS) return eval_cons(env, args);
-        if (value == EXPR_LET) return eval_let(env, args);
-
-        // ???
-        assert(false);
-        return 0;
+    if (expr_get_type(name) == Expr_Builtin) {
+        return expr_get_builtin(name)(env, args);
     } else {
         // Must be in the form ((fn ..) ..)
         assert(expr_get_type(name) == Expr_Cons);
 
-        Expr fn_kw = expr_get_car(name);
-        assert(expr_get_type(fn_kw) == Expr_Value);
-        assert(expr_value(fn_kw) == EXPR_FN);
-        name = expr_get_cdr(name);
+        // Expr fn_kw = expr_get_car(name);
+        // assert(expr_get_type(fn_kw) == Expr_Value);
+        // assert(expr_value(fn_kw) == EXPR_FN);
+        // name = expr_get_cdr(name);
 
-        Expr fn_args = expr_get_car(name);
-        assert(expr_get_type(fn_args) == Expr_Cons);
-        name = expr_get_cdr(name);
+        // Expr fn_args = expr_get_car(name);
+        // assert(expr_get_type(fn_args) == Expr_Cons);
+        // name = expr_get_cdr(name);
 
-        Expr fn_body = expr_get_car(name);
-        assert(expr_get_type(fn_args) == Expr_Cons);
-        name = expr_get_cdr(name);
-        assert(name == 0);
+        // Expr fn_body = expr_get_car(name);
+        // assert(expr_get_type(fn_args) == Expr_Cons);
+        // name = expr_get_cdr(name);
+        // assert(name == 0);
 
         // TODO: apply body
         return 0;

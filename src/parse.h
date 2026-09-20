@@ -114,7 +114,13 @@ static u32 parse_list(Parse *p) {
     return ret;
 }
 
-static u32 parse(char *input) {
+static Expr parse(char *input) {
     Parse p = {.cursor = input};
-    return expr_cons(expr_str("do"), parse_list(&p));
+    Expr list = parse_list(&p);
+
+    if (expr_get_cdr(list) == 0) {
+        return expr_get_car(list);
+    } else {
+        return expr_cons(expr_str("do"), list);
+    }
 }

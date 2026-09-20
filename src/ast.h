@@ -11,10 +11,12 @@
 typedef enum {
     Expr_Cons,
     Expr_Value,
+    Expr_Builtin,
     Expr_Nil,
 } Expr_Type;
 
 typedef u32 Expr;
+typedef Expr (*expr_builtin_t)(Expr *env, Expr in);
 
 // API
 static Expr_Type expr_get_type(Expr ptr);
@@ -22,11 +24,13 @@ static Expr expr_get_car(Expr ptr);
 static Expr expr_get_cdr(Expr ptr);
 static i64 expr_get_value(Expr ptr);
 static bool expr_get_mark(Expr ptr);
+static expr_builtin_t expr_get_builtin(Expr ptr);
 
 static void expr_set_car(Expr ptr, Expr car);
 static void expr_set_cdr(Expr ptr, Expr cdr);
 static void expr_set_val(Expr ptr, i64 val);
 static void expr_set_mark(Expr ptr, bool mark);
+static void expr_set_builtin(Expr ptr, expr_builtin_t fcn);
 
 static void expr_free(Expr ptr);
 static Expr expr_alloc(Expr_Type type);
@@ -41,6 +45,12 @@ static Expr expr_cons(Expr car, Expr cdr) {
 static Expr expr_value(i64 value) {
     Expr ix = expr_alloc(Expr_Value);
     expr_set_val(ix, value);
+    return ix;
+}
+
+static Expr expr_builtin(expr_builtin_t fcn) {
+    Expr ix = expr_alloc(Expr_Builtin);
+    expr_set_builtin(ix, fcn);
     return ix;
 }
 
@@ -83,6 +93,7 @@ typedef struct {
             Expr car, cdr;
         };
         i64 value;
+        Expr (*builtin)(Expr *env, Expr e);
     };
 } Expr_Int;
 
@@ -141,6 +152,11 @@ static bool expr_get_mark(Expr ptr) {
     return expr_heap[ptr].mark;
 }
 
+static expr_builtin_t expr_get_builtin(Expr ptr) {
+    assert(expr_get_type(ptr) == Expr_Builtin);
+    return expr_heap[ptr].builtin;
+}
+
 static void expr_set_car(Expr ptr, Expr car) {
     assert(expr_get_type(ptr) == Expr_Cons);
     expr_heap[ptr].car = car;
@@ -158,6 +174,11 @@ static void expr_set_val(Expr ptr, i64 value) {
 
 static void expr_set_mark(Expr ptr, bool mark) {
     expr_heap[ptr].mark = mark;
+}
+
+static void expr_set_builtin(Expr ptr, expr_builtin_t fcn) {
+    assert(expr_get_type(ptr) == Expr_Builtin);
+    expr_heap[ptr].builtin = fcn;
 }
 
 // GC

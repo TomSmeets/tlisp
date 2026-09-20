@@ -2,17 +2,20 @@
 #include "ast.h"
 
 // Search the environment for a symbol
-static Expr env_search(Expr env, Expr label) {
+static bool env_search(Expr env, Expr label, Expr *out) {
     // if (expr_eq(expr_label("env"), label)) return env;
     Expr it = env;
     for (;;) {
-        if (it == 0) return expr_cons(expr_str("INVALID_VAR"), expr_cons(label, expr_cons(env, 0)));
+        if (it == 0)  return false;
         Expr pair = expr_get_car(it);
         Expr next = expr_get_cdr(it);
 
         Expr key = expr_get_car(pair);
         Expr val = expr_get_cdr(pair);
-        if (expr_eq(key, label)) return val;
+        if (expr_eq(key, label)) {
+            *out = val;
+            return true;
+        }
         it = next;
     }
 }
