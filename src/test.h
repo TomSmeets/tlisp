@@ -58,7 +58,8 @@ static void test(void) {
     test_eval("(car (quote (1 2 3)))", "1");
     test_eval("(cdr (quote (1 2 3)))", "(2 3)");
     test_eval("((fn (x) (add x x)) 2)", "4");
-    test_eval("((fn (x, y) (add x y)) 1 2)", "3");
+    test_eval("((fn (x y) (add x y)) 1 2)", "3");
+    test_eval("(def inc (x) (add x 1)) (inc 4)", "5");
     test_eval("(let f (fn (a) (add a a))) (f 3)", "6");
     test_eval(
         "(let a 1)"

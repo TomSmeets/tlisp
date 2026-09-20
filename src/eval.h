@@ -119,6 +119,90 @@ static Expr eval_print(Expr *env, Expr args) {
     return 0;
 }
 
+
+// ((fnapp (x y z) env body) x y z)
+static Expr eval_fnapp(Expr *env, Expr fn, Expr args) {
+    // printf("Eval_fnapp:");
+    // printf(" fn=");
+    // pretty_value(fn);
+    // printf(" args=");
+    // pretty_value(args);
+    // printf("\n");
+
+    Expr fn_kw = expr_get_car(fn);
+    fn = expr_get_cdr(fn);
+    Expr fn_args = expr_get_car(fn);
+    fn = expr_get_cdr(fn);
+    Expr fn_env = expr_get_car(fn);
+    fn = expr_get_cdr(fn);
+    Expr fn_body = expr_get_car(fn);
+    fn = expr_get_cdr(fn);
+    assert(fn == 0);
+
+    // Add to function env
+    while(args && fn_args) {
+        Expr arg_name = expr_get_car(fn_args);
+        fn_args = expr_get_cdr(fn_args);
+
+        Expr arg_value = eval_value(env, expr_get_car(args));
+        args = expr_get_cdr(args);
+
+        // Add to env
+        env_add(&fn_env, arg_name, arg_value);
+    }
+    assert(args == 0);
+    assert(fn_args == 0);
+
+    // eval body
+    return eval_value(&fn_env, fn_body);
+}
+
+// (fn args body)
+static Expr eval_fn(Expr *env, Expr args) {
+    Expr fn_args = expr_get_car(args);
+    args = expr_get_cdr(args);
+    Expr fn_body = expr_get_car(args);
+    args = expr_get_cdr(args);
+    assert(args == 0);
+
+    // (fnapp args env body)
+    Expr out = 0;
+    out = expr_cons(fn_body, out);
+    out = expr_cons(*env, out);
+    out = expr_cons(fn_args, out);
+    out = expr_cons(expr_builtin((void *)eval_fnapp), out);
+    return out;
+}
+
+// (def name args body)
+static Expr eval_def(Expr *env, Expr args) {
+    Expr fn_name = expr_get_car(args);
+    args = expr_get_cdr(args);
+    Expr fn_args = expr_get_car(args);
+    args = expr_get_cdr(args);
+    Expr fn_body = expr_get_car(args);
+    args = expr_get_cdr(args);
+    assert(args == 0);
+
+
+    // (let name (fn args body))
+    return eval_value(
+        env, expr_cons(expr_builtin(eval_let), expr_cons(fn_name, expr_cons(expr_cons(expr_builtin(eval_fn), expr_cons(fn_args, expr_cons(fn_body, 0))), 0)))
+    );
+}
+// (list ...)
+static Expr eval_builtin_list(Expr *env, Expr args) {
+    if (args == 0) return 0;
+    Expr car = eval_value(env, expr_get_car(args));
+    Expr cdr = expr_get_cdr(args);
+    return expr_cons(car, eval_builtin_list(env, cdr));
+}
+
+// (readfile name)
+static Expr eval_builtin_readfile(Expr *env, Expr args) {
+    /
+}
+
 static void eval_add_builtins(Expr *env) {
     env_add(env, expr_str("quote"), expr_builtin(eval_quote));
     env_add(env, expr_str("add"), expr_builtin(eval_add));
@@ -130,9 +214,12 @@ static void eval_add_builtins(Expr *env) {
     env_add(env, expr_str("env?"),   expr_builtin(eval_env_get));
     env_add(env, expr_str("env!"), expr_builtin(eval_env_set));
     env_add(env, expr_str("print"), expr_builtin(eval_print));
-    // env_add(env, expr_str("nil?"),  expr_builtin(eval_is_nil));
-    // env_add(env, expr_str("fn"),    expr_builtin(eval_fn));
+    env_add(env, expr_str("list"), expr_builtin(eval_builtin_list));
+    env_add(env, expr_str("fn"),    expr_builtin(eval_fn));
+    env_add(env, expr_str("def"),   expr_builtin(eval_def));
+    env_add(env, expr_str("readfile"),   expr_builtin(eval_builtin_readfile));
     // env_add(env, expr_str("cons?"), expr_builtin(eval_is_cons));
+    // env_add(env, expr_str("nil?"),  expr_builtin(eval_is_nil));
 }
 
 static Expr eval_value(Expr *env, Expr value) {
@@ -159,28 +246,20 @@ static Expr eval_list(Expr *env, Expr list) {
     Expr args = expr_get_cdr(list);
 
     // Should be either a builtin, represented by a number: (123 ..)
+    // printf("Eval_List: list=");
+    // pretty_value(list);
+    // printf(" name=");
+    // pretty_value(name);
+    // printf("\n");
     if (expr_get_type(name) == Expr_Builtin) {
+        if (expr_get_builtin(name) == (void *)eval_fnapp) return list;
         return expr_get_builtin(name)(env, args);
     } else {
         // Must be in the form ((fn ..) ..)
         assert(expr_get_type(name) == Expr_Cons);
-
-        // Expr fn_kw = expr_get_car(name);
-        // assert(expr_get_type(fn_kw) == Expr_Value);
-        // assert(expr_value(fn_kw) == EXPR_FN);
-        // name = expr_get_cdr(name);
-
-        // Expr fn_args = expr_get_car(name);
-        // assert(expr_get_type(fn_args) == Expr_Cons);
-        // name = expr_get_cdr(name);
-
-        // Expr fn_body = expr_get_car(name);
-        // assert(expr_get_type(fn_args) == Expr_Cons);
-        // name = expr_get_cdr(name);
-        // assert(name == 0);
-
-        // TODO: apply body
-        return 0;
+        assert(expr_get_type(expr_get_car(name)) == Expr_Builtin);
+        assert(expr_get_builtin(expr_get_car(name)) == (void*)eval_fnapp);
+        return eval_fnapp(env, name, args);
     }
 
     // // or a lambda

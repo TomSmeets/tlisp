@@ -35,6 +35,8 @@ static void pretty_value(Expr e) {
     } else if (t == Expr_Value) {
         i64 val = expr_get_value(e);
         printf("%ld", val);
+    } else if (t == Expr_Builtin) {
+        printf("##");
     } else if (t == Expr_Cons) {
         printf("(");
         pretty_list(e);
