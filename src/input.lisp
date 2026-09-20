@@ -1,2 +1,1 @@
-(quote ((add 1 1) 1 1 1 (add 1 1)))
-(add 3 4)
+(car (readfile src/input.lisp))

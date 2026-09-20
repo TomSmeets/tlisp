@@ -200,7 +200,31 @@ static Expr eval_builtin_list(Expr *env, Expr args) {
 
 // (readfile name)
 static Expr eval_builtin_readfile(Expr *env, Expr args) {
-    /
+    char path[1024];
+    expr_get_str(expr_get_car(args), sizeof(path), path);
+    args = expr_get_cdr(args);
+    assert(args == 0);
+
+    FILE *f = fopen(path, "rb");
+    Expr first = 0;
+    Expr last = 0;
+
+    for (;;) {
+        char byte = 0;
+        int n = fread(&byte, 1, 1, f);
+        if (n != 1) break;
+        Expr e = expr_cons(expr_value(byte), 0);
+
+        if (last) {
+            expr_set_cdr(last, e);
+            last = e;
+        } else {
+            last = e;
+            first = e;
+        }
+    }
+
+    return first;
 }
 
 static void eval_add_builtins(Expr *env) {
@@ -261,54 +285,5 @@ static Expr eval_list(Expr *env, Expr list) {
         assert(expr_get_builtin(expr_get_car(name)) == (void*)eval_fnapp);
         return eval_fnapp(env, name, args);
     }
-
-    // // or a lambda
-    // // // ((fn (x y z) (+ x y z)) ... )
-    // assert(expr_get_type(car) == Expr_Cons) {
-    // Expr fn = expr_get_car(car);
-    // assert(expr_get_type(fn) == Expr_Value);
-    // assert(expr_value(fn) == EXPR_FN);
-
-    // Expr args = expr_get_car(cdr);
-    // cdr = expr_get_cdr(cdr);
-
-    // Expr args = expr_get_car(cdr);
-    // cdr = expr_get_cdr(cdr);
-
-    // // Eval
-    // Expr lam = eval_value(scope(car, s.env)).value;
-    // if (expr_eq(expr_get_car(lam), expr_label("fn"))) {
-    //     lam = expr_get_cdr(lam);
-    //     Expr body_env = expr_get_car(lam);
-    //     lam = expr_get_cdr(lam);
-    //     Expr args = expr_get_car(lam);
-    //     lam = expr_get_cdr(lam);
-    //     Expr body = expr_get_car(lam);
-    //     lam = expr_get_cdr(lam);
-    //     assert(lam == 0);
-
-    //     // Iterate over arguments and create a new env for the function body
-    //     Expr arg_values = cdr;
-    //     Expr arg_names = args;
-
-    //     for (;;) {
-    //         if (arg_names == 0 && arg_values == 0) break;
-    //         assert(arg_names != 0);
-    //         assert(arg_values != 0);
-
-    //         Expr arg_name = expr_get_car(arg_names);
-    //         assert(expr_get_type(arg_name) == Expr_Label);
-
-    //         Expr arg_value = eval_value(scope(expr_get_car(arg_values), s.env)).value;
-    //         body_env = env_add(body_env, arg_name, arg_value);
-    //         arg_names = expr_get_cdr(arg_names);
-    //         arg_values = expr_get_cdr(arg_values);
-    //     }
-
-    //     Expr result = eval_value(scope(body, body_env)).value;
-    //     return scope(result, s.env);
-    // }
-
-    // return e;
-    return 0;
+   return 0;
 }

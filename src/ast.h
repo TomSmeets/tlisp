@@ -68,6 +68,16 @@ static Expr expr_str(char *str) {
     return expr_bytes(strlen(str), (u8 *)str);
 }
 
+static size_t expr_get_str(Expr expr, size_t size, char *buffer) {
+    int i = 0;
+    while (expr && i + 1 < size) {
+        buffer[i++] = expr_get_value(expr_get_car(expr));
+        expr = expr_get_cdr(expr);
+    }
+    buffer[i++] = 0;
+    return i;
+}
+
 static bool expr_eq(Expr a, Expr b) {
     if (a == b) return true;
     Expr_Type type = expr_get_type(a);
