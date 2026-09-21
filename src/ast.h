@@ -16,7 +16,9 @@ typedef enum {
 } Expr_Type;
 
 // A 32 bit pointer
-typedef struct { u32 index; } Expr;
+typedef struct {
+    u32 index;
+} Expr;
 typedef Expr (*expr_builtin_t)(Expr *env, Expr in);
 
 // API
@@ -136,7 +138,7 @@ static Expr_Int expr_heap[1024 * 64];
 
 static Expr expr_alloc(Expr_Type type) {
     Expr ix;
-    if(free_count > 0) {
+    if (free_count > 0) {
         ix = expr_freelist;
         expr_freelist = expr_get_cdr(expr_freelist);
         free_count--;
@@ -242,7 +244,6 @@ static void expr_sweep(void) {
     }
 }
 
-
 static bool expr_is_nil(Expr expr) {
     return expr_get_type(expr) == EXPR_TYPE_NIL;
 }
@@ -262,11 +263,10 @@ static void expr_push(Expr *list, Expr value) {
 static void expr_append(Expr *first, Expr *last, Expr value) {
     Expr cons = expr_cons(value, expr_nil());
 
-    if(expr_is_nil(*first)) {
+    if (expr_is_nil(*first)) {
         *first = *last = cons;
     } else {
         expr_set_cdr(*last, cons);
         *last = cons;
     }
 }
-

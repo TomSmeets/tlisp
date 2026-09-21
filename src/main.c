@@ -1,9 +1,9 @@
 // #include "ast.h"
 // #include "error.h"
+#include "eval.h"
 #include "parse.h"
 #include "pretty.h"
 #include "test.h"
-#include "eval.h"
 
 static char *mem_read_file(char *path) {
     FILE *f = fopen(path, "r");
@@ -15,7 +15,7 @@ static char *mem_read_file(char *path) {
 
 int main(int argc, char **argv) {
     test();
-    
+
     if (argc != 2) {
         printf("usage: tlisp [SOURCE]\n");
         return 1;

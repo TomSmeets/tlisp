@@ -49,9 +49,9 @@ static Expr eval_let(Expr *env, Expr args) {
 // (do ...) Scoped block, returns last value
 static Expr eval_do(Expr *env, Expr args) {
     Expr inner = *env;
-    for(;;) {
+    for (;;) {
         Expr result = eval_value(&inner, expr_pop(&args));
-        if(expr_is_nil(args)) return result;
+        if (expr_is_nil(args)) return result;
     }
 }
 
@@ -89,11 +89,11 @@ static Expr eval_env_set(Expr *env, Expr args) {
 }
 
 static Expr eval_print(Expr *env, Expr args) {
-    for(;;) {
+    for (;;) {
         Expr car = eval_value(env, expr_pop(&args));
         pretty_value(car);
 
-        if(expr_is_nil(args)) {
+        if (expr_is_nil(args)) {
             printf("\n");
             return expr_nil();
         }
@@ -111,7 +111,7 @@ static Expr eval_fnapp(Expr *env, Expr fn, Expr args) {
     assert(expr_is_nil(fn));
 
     // Add to function env
-    while(!expr_is_nil(args) && !expr_is_nil(fn_args)) {
+    while (!expr_is_nil(args) && !expr_is_nil(fn_args)) {
         Expr arg_name = expr_pop(&fn_args);
         Expr arg_value = eval_value(env, expr_pop(&args));
 
@@ -196,18 +196,18 @@ static Expr eval_builtin_readfile(Expr *env, Expr args) {
 static void eval_add_builtins(Expr *env) {
     env_add(env, expr_str("quote"), expr_builtin(eval_quote));
     env_add(env, expr_str("add"), expr_builtin(eval_add));
-    env_add(env, expr_str("let"),   expr_builtin(eval_let));
-    env_add(env, expr_str("do"),    expr_builtin(eval_do));
-    env_add(env, expr_str("cons"),  expr_builtin(eval_cons));
-    env_add(env, expr_str("car"),   expr_builtin(eval_car));
-    env_add(env, expr_str("cdr"),   expr_builtin(eval_cdr));
-    env_add(env, expr_str("env?"),   expr_builtin(eval_env_get));
+    env_add(env, expr_str("let"), expr_builtin(eval_let));
+    env_add(env, expr_str("do"), expr_builtin(eval_do));
+    env_add(env, expr_str("cons"), expr_builtin(eval_cons));
+    env_add(env, expr_str("car"), expr_builtin(eval_car));
+    env_add(env, expr_str("cdr"), expr_builtin(eval_cdr));
+    env_add(env, expr_str("env?"), expr_builtin(eval_env_get));
     env_add(env, expr_str("env!"), expr_builtin(eval_env_set));
     env_add(env, expr_str("print"), expr_builtin(eval_print));
     env_add(env, expr_str("list"), expr_builtin(eval_builtin_list));
-    env_add(env, expr_str("fn"),    expr_builtin(eval_fn));
-    env_add(env, expr_str("def"),   expr_builtin(eval_def));
-    env_add(env, expr_str("readfile"),   expr_builtin(eval_builtin_readfile));
+    env_add(env, expr_str("fn"), expr_builtin(eval_fn));
+    env_add(env, expr_str("def"), expr_builtin(eval_def));
+    env_add(env, expr_str("readfile"), expr_builtin(eval_builtin_readfile));
     // env_add(env, expr_str("cons?"), expr_builtin(eval_is_cons));
     // env_add(env, expr_str("nil?"),  expr_builtin(eval_is_nil));
 }
@@ -248,8 +248,8 @@ static Expr eval_list(Expr *env, Expr list) {
         // Must be in the form ((fn ..) ..)
         assert(expr_get_type(name) == EXPR_TYPE_CONS);
         assert(expr_get_type(expr_get_car(name)) == EXPR_TYPE_BUILTIN);
-        assert(expr_get_builtin(expr_get_car(name)) == (void*)eval_fnapp);
+        assert(expr_get_builtin(expr_get_car(name)) == (void *)eval_fnapp);
         return eval_fnapp(env, name, args);
     }
-   return expr_nil();
+    return expr_nil();
 }

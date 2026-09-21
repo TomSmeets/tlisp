@@ -22,7 +22,7 @@ static bool is_string(Expr e) {
 static void pretty_string(Expr e) {
     if (expr_is_nil(e)) return;
     char c = expr_get_value(expr_get_car(e));
-    if(c == '\n') {
+    if (c == '\n') {
         printf("\\n");
     } else {
         printf("%c", c);
