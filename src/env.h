@@ -6,7 +6,7 @@ static bool env_search(Expr env, Expr label, Expr *out) {
     // if (expr_eq(expr_label("env"), label)) return env;
     Expr it = env;
     for (;;) {
-        if (it == 0)  return false;
+        if (expr_is_nil(it))  return false;
         Expr pair = expr_get_car(it);
         Expr next = expr_get_cdr(it);
 

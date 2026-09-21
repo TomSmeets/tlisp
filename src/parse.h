@@ -54,9 +54,9 @@ static long parse_long(Parse *p) {
     return num;
 }
 
-static u32 parse_list(Parse *p);
+static Expr parse_list(Parse *p);
 
-static u32 parse_value(Parse *p) {
+static Expr parse_value(Parse *p) {
     // Skip any whitespace
     parse_whitespace(p);
     char c = parse_peek(p);
@@ -67,7 +67,7 @@ static u32 parse_value(Parse *p) {
     }
 
     if (c == '\0') {
-        return 0;
+        return expr_nil();
     }
 
     if ((c >= '0' && c <= '9') || (c == '-' || c == '+')) {
@@ -89,14 +89,14 @@ static u32 parse_value(Parse *p) {
 }
 
 // Returns a list
-static u32 parse_list(Parse *p) {
+static Expr parse_list(Parse *p) {
     parse_whitespace(p);
     char c = parse_peek(p);
 
     // Nil
     if (c == ')') {
         parse_next(p);
-        return 0;
+        return expr_nil();
     }
 
     if (c == '.') {
@@ -105,20 +105,19 @@ static u32 parse_list(Parse *p) {
     }
 
     if (c == '\0') {
-        return 0;
+        return expr_nil();
     }
 
-    u32 car = parse_value(p);
-    u32 cdr = parse_list(p);
-    u32 ret = expr_cons(car, cdr);
+    Expr car = parse_value(p);
+    Expr cdr = parse_list(p);
+    Expr ret = expr_cons(car, cdr);
     return ret;
 }
 
 static Expr parse(char *input) {
     Parse p = {.cursor = input};
     Expr list = parse_list(&p);
-
-    if (expr_get_cdr(list) == 0) {
+    if (expr_is_nil(expr_get_cdr(list))) {
         return expr_get_car(list);
     } else {
         return expr_cons(expr_str("do"), list);

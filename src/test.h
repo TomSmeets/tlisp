@@ -23,7 +23,7 @@ static void test_eval(char *input, char *expect) {
     pretty_value(input_exp);
     printf("\n");
 
-    Expr env = 0;
+    Expr env = expr_nil();
     eval_add_builtins(&env);
     Expr expect_exp = parse(expect);
     Expr eval = eval_value(&env, input_exp);
@@ -43,9 +43,9 @@ static void test(void) {
     test_parse("1", expr_value(1));
     test_parse("-1", expr_value(-1));
     test_parse("12345678", expr_value(12345678));
-    test_parse("()", 0);
+    test_parse("()", expr_nil());
     test_parse("(1 . 2)", expr_cons(expr_value(1), expr_value(2)));
-    test_parse("(add 1 2)", expr_cons(expr_str("add"), expr_cons(expr_value(1), expr_cons(expr_value(2), 0))));
+    test_parse("(add 1 2)", expr_cons(expr_str("add"), expr_cons(expr_value(1), expr_cons(expr_value(2), expr_nil()))));
 
     test_eval("1", "1");
     test_eval("(add 1 2 -4)", "-1");

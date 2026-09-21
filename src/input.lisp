@@ -1,1 +1,1 @@
-(car (readfile src/input.lisp))
+(readfile (quote src/input.lisp))

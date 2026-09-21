@@ -31,7 +31,7 @@ int main(int argc, char **argv) {
     pretty_value(p);
     printf("\n");
 
-    Expr env = 0;
+    Expr env = expr_nil();
     eval_add_builtins(&env);
     Expr e = eval_value(&env, p);
 

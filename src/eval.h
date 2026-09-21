@@ -10,41 +10,31 @@
 // ================
 // Eval
 // ================
-
-// A pair of value and environment
-typedef struct {
-    Expr env;
-} Scope;
-
 static Expr eval_value(Expr *env, Expr value);
 static Expr eval_list(Expr *env, Expr list);
 
 // Return argument without evaluating
 static Expr eval_quote(Expr *env, Expr args) {
-    Expr arg = expr_get_car(args);
-    args = expr_get_cdr(args);
-    assert(args == 0);
+    Expr arg = expr_pop(&args);
+    assert(expr_is_nil(args));
     return arg;
 }
 
 // Sum all arguments
 static Expr eval_add(Expr *env, Expr args) {
     i64 sum = 0;
-    while (args) {
-        Expr car = eval_value(env, expr_get_car(args));
+    while (!expr_is_nil(args)) {
+        Expr car = eval_value(env, expr_pop(&args));
         sum += expr_get_value(car);
-        args = expr_get_cdr(args);
     }
     return expr_value(sum);
 }
 
 // (let x y)
 static Expr eval_let(Expr *env, Expr args) {
-    Expr key = expr_get_car(args);
-    args = expr_get_cdr(args);
-    Expr value = expr_get_car(args);
-    args = expr_get_cdr(args);
-    assert(args == 0);
+    Expr key = expr_pop(&args);
+    Expr value = expr_pop(&args);
+    assert(expr_is_nil(args));
 
     // Evaluate value
     value = eval_value(env, value);
@@ -53,105 +43,83 @@ static Expr eval_let(Expr *env, Expr args) {
     env_add(env, key, value);
 
     // Return nil
-    return 0;
+    return expr_nil();
 }
 
 // (do ...) Scoped block, returns last value
 static Expr eval_do(Expr *env, Expr args) {
     Expr inner = *env;
-    Expr result = 0;
-    while (args) {
-        // Evaluate expression
-        result = eval_value(&inner, expr_get_car(args));
-
-        // Advance to next argument
-        args = expr_get_cdr(args);
+    for(;;) {
+        Expr result = eval_value(&inner, expr_pop(&args));
+        if(expr_is_nil(args)) return result;
     }
-    return result;
 }
 
 static Expr eval_cons(Expr *env, Expr args) {
-    Expr arg1 = eval_value(env, expr_get_car(args));
-    args = expr_get_cdr(args);
-    Expr arg2 = eval_value(env, expr_get_car(args));
-    args = expr_get_cdr(args);
-    assert(args == 0);
+    Expr arg1 = eval_value(env, expr_pop(&args));
+    Expr arg2 = eval_value(env, expr_pop(&args));
+    assert(expr_is_nil(args));
     return expr_cons(arg1, arg2);
 }
 
 static Expr eval_car(Expr *env, Expr args) {
-    Expr arg1 = eval_value(env, expr_get_car(args));
-    args = expr_get_cdr(args);
-    assert(args == 0);
+    Expr arg1 = eval_value(env, expr_pop(&args));
+    assert(expr_is_nil(args));
     return expr_get_car(arg1);
 }
 
 static Expr eval_cdr(Expr *env, Expr args) {
-    Expr arg1 = eval_value(env, expr_get_car(args));
-    args = expr_get_cdr(args);
-    assert(args == 0);
+    Expr arg1 = eval_value(env, expr_pop(&args));
+    assert(expr_is_nil(args));
     return expr_get_cdr(arg1);
 }
 
 // Get current scope (fun meta function)
 static Expr eval_env_get(Expr *env, Expr args) {
-    assert(args == 0);
+    assert(expr_is_nil(args));
     return *env;
 }
 
 // Set current scope (fun meta function)
 static Expr eval_env_set(Expr *env, Expr args) {
-    Expr arg1 = eval_value(env, expr_get_car(args));
-    args = expr_get_cdr(args);
-    assert(args == 0);
+    Expr arg1 = eval_value(env, expr_pop(&args));
+    assert(expr_is_nil(args));
     *env = arg1;
-    return 0;
+    return expr_nil();
 }
 
 static Expr eval_print(Expr *env, Expr args) {
-    while (args) {
-        Expr car = eval_value(env, expr_get_car(args));
+    for(;;) {
+        Expr car = eval_value(env, expr_pop(&args));
         pretty_value(car);
-        printf(" ");
-        args = expr_get_cdr(args);
-    }
-    printf("\n");
-    return 0;
-}
 
+        if(expr_is_nil(args)) {
+            printf("\n");
+            return expr_nil();
+        }
+
+        printf(" ");
+    }
+}
 
 // ((fnapp (x y z) env body) x y z)
 static Expr eval_fnapp(Expr *env, Expr fn, Expr args) {
-    // printf("Eval_fnapp:");
-    // printf(" fn=");
-    // pretty_value(fn);
-    // printf(" args=");
-    // pretty_value(args);
-    // printf("\n");
-
-    Expr fn_kw = expr_get_car(fn);
-    fn = expr_get_cdr(fn);
-    Expr fn_args = expr_get_car(fn);
-    fn = expr_get_cdr(fn);
-    Expr fn_env = expr_get_car(fn);
-    fn = expr_get_cdr(fn);
-    Expr fn_body = expr_get_car(fn);
-    fn = expr_get_cdr(fn);
-    assert(fn == 0);
+    Expr fn_kw = expr_pop(&fn);
+    Expr fn_args = expr_pop(&fn);
+    Expr fn_env = expr_pop(&fn);
+    Expr fn_body = expr_pop(&fn);
+    assert(expr_is_nil(fn));
 
     // Add to function env
-    while(args && fn_args) {
-        Expr arg_name = expr_get_car(fn_args);
-        fn_args = expr_get_cdr(fn_args);
-
-        Expr arg_value = eval_value(env, expr_get_car(args));
-        args = expr_get_cdr(args);
+    while(!expr_is_nil(args) && !expr_is_nil(fn_args)) {
+        Expr arg_name = expr_pop(&fn_args);
+        Expr arg_value = eval_value(env, expr_pop(&args));
 
         // Add to env
         env_add(&fn_env, arg_name, arg_value);
     }
-    assert(args == 0);
-    assert(fn_args == 0);
+    assert(expr_is_nil(args));
+    assert(expr_is_nil(fn_args));
 
     // eval body
     return eval_value(&fn_env, fn_body);
@@ -159,14 +127,12 @@ static Expr eval_fnapp(Expr *env, Expr fn, Expr args) {
 
 // (fn args body)
 static Expr eval_fn(Expr *env, Expr args) {
-    Expr fn_args = expr_get_car(args);
-    args = expr_get_cdr(args);
-    Expr fn_body = expr_get_car(args);
-    args = expr_get_cdr(args);
-    assert(args == 0);
+    Expr fn_args = expr_pop(&args);
+    Expr fn_body = expr_pop(&args);
+    assert(expr_is_nil(args));
 
     // (fnapp args env body)
-    Expr out = 0;
+    Expr out = expr_nil();
     out = expr_cons(fn_body, out);
     out = expr_cons(*env, out);
     out = expr_cons(fn_args, out);
@@ -176,23 +142,28 @@ static Expr eval_fn(Expr *env, Expr args) {
 
 // (def name args body)
 static Expr eval_def(Expr *env, Expr args) {
-    Expr fn_name = expr_get_car(args);
-    args = expr_get_cdr(args);
-    Expr fn_args = expr_get_car(args);
-    args = expr_get_cdr(args);
-    Expr fn_body = expr_get_car(args);
-    args = expr_get_cdr(args);
-    assert(args == 0);
+    Expr fn_name = expr_pop(&args);
+    Expr fn_args = expr_pop(&args);
+    Expr fn_body = expr_pop(&args);
+    assert(expr_is_nil(args));
 
+    Expr let_body = expr_nil();
+    expr_push(&let_body, fn_body);
+    expr_push(&let_body, fn_args);
+    expr_push(&let_body, expr_builtin(eval_fn));
+
+    Expr let_expr = expr_nil();
+    expr_push(&let_expr, let_body);
+    expr_push(&let_expr, fn_name);
+    expr_push(&let_expr, expr_builtin(eval_let));
 
     // (let name (fn args body))
-    return eval_value(
-        env, expr_cons(expr_builtin(eval_let), expr_cons(fn_name, expr_cons(expr_cons(expr_builtin(eval_fn), expr_cons(fn_args, expr_cons(fn_body, 0))), 0)))
-    );
+    return eval_value(env, let_expr);
 }
+
 // (list ...)
 static Expr eval_builtin_list(Expr *env, Expr args) {
-    if (args == 0) return 0;
+    if (expr_is_nil(args)) return args;
     Expr car = eval_value(env, expr_get_car(args));
     Expr cdr = expr_get_cdr(args);
     return expr_cons(car, eval_builtin_list(env, cdr));
@@ -200,28 +171,23 @@ static Expr eval_builtin_list(Expr *env, Expr args) {
 
 // (readfile name)
 static Expr eval_builtin_readfile(Expr *env, Expr args) {
-    char path[1024];
-    expr_get_str(expr_get_car(args), sizeof(path), path);
-    args = expr_get_cdr(args);
-    assert(args == 0);
+    Expr arg0 = eval_value(env, expr_pop(&args));
+    assert(expr_is_nil(args));
 
+    // Extract path
+    char path[1024];
+    expr_get_str(arg0, sizeof(path), path);
+
+    // Read bytes
     FILE *f = fopen(path, "rb");
-    Expr first = 0;
-    Expr last = 0;
+    Expr first = expr_nil();
+    Expr last = expr_nil();
 
     for (;;) {
         char byte = 0;
         int n = fread(&byte, 1, 1, f);
         if (n != 1) break;
-        Expr e = expr_cons(expr_value(byte), 0);
-
-        if (last) {
-            expr_set_cdr(last, e);
-            last = e;
-        } else {
-            last = e;
-            first = e;
-        }
+        expr_append(&first, &last, expr_value(byte));
     }
 
     return first;
@@ -248,7 +214,7 @@ static void eval_add_builtins(Expr *env) {
 
 static Expr eval_value(Expr *env, Expr value) {
     // nil / value / builtin
-    if (expr_get_type(value) != Expr_Cons) return value;
+    if (expr_get_type(value) != EXPR_TYPE_CONS) return value;
 
     // Label
     bool error = false;
@@ -261,7 +227,7 @@ static Expr eval_value(Expr *env, Expr value) {
 // Function evaluation
 static Expr eval_list(Expr *env, Expr list) {
     // Must be a list
-    assert(expr_get_type(list) == Expr_Cons);
+    assert(expr_get_type(list) == EXPR_TYPE_CONS);
 
     // car -> function
     // cdr -> arguments
@@ -275,15 +241,15 @@ static Expr eval_list(Expr *env, Expr list) {
     // printf(" name=");
     // pretty_value(name);
     // printf("\n");
-    if (expr_get_type(name) == Expr_Builtin) {
+    if (expr_get_type(name) == EXPR_TYPE_BUILTIN) {
         if (expr_get_builtin(name) == (void *)eval_fnapp) return list;
         return expr_get_builtin(name)(env, args);
     } else {
         // Must be in the form ((fn ..) ..)
-        assert(expr_get_type(name) == Expr_Cons);
-        assert(expr_get_type(expr_get_car(name)) == Expr_Builtin);
+        assert(expr_get_type(name) == EXPR_TYPE_CONS);
+        assert(expr_get_type(expr_get_car(name)) == EXPR_TYPE_BUILTIN);
         assert(expr_get_builtin(expr_get_car(name)) == (void*)eval_fnapp);
         return eval_fnapp(env, name, args);
     }
-   return 0;
+   return expr_nil();
 }
