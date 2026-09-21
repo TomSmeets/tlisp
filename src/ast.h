@@ -213,6 +213,10 @@ static void expr_set_builtin(Expr ptr, expr_builtin_t fcn) {
     expr_heap[ptr.index].builtin = fcn;
 }
 
+static void expr_set_type(Expr ptr, Expr_Type type) {
+    expr_heap[ptr.index].type = type;
+}
+
 // GC
 static void expr_mark(Expr expr) {
     // Already marked
@@ -230,8 +234,8 @@ static void expr_mark(Expr expr) {
 
 static void expr_sweep(void) {
     free_count = 0;
-    for (u32 ix = expr_count - 1; ix >= 0; --ix) {
-        Expr ptr = {ix};
+    for (int i = 0; i < expr_count; ++i) {
+        Expr ptr = {expr_count - i - 1};
 
         // Object is in use
         if (expr_get_mark(ptr)) {

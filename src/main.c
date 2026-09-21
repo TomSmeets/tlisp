@@ -35,6 +35,12 @@ int main(int argc, char **argv) {
     eval_add_builtins(&env);
     Expr e = eval_value(&env, p);
 
+    printf("total=%u free=%u used=%u\n", expr_count, free_count, expr_count - free_count);
+    expr_mark(e);
+    expr_mark(env);
+    expr_sweep();
+    printf("total=%u free=%u used=%u\n", expr_count, free_count, expr_count - free_count);
+
     printf("EVAL: ");
     pretty_value(e);
     printf("\n");

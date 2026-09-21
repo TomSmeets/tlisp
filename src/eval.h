@@ -193,6 +193,16 @@ static Expr eval_builtin_readfile(Expr *env, Expr args) {
     return first;
 }
 
+static Expr eval_builtin_set(Expr *env, Expr args) {
+    Expr arg0 = eval_value(env, expr_pop(&args));
+    Expr arg1 = eval_value(env, expr_pop(&args));
+    assert(expr_is_nil(args));
+
+    expr_set_type(arg0, EXPR_TYPE_VALUE);
+    expr_set_val(arg0, expr_get_value(arg1));
+    return expr_nil();
+}
+
 static void eval_add_builtins(Expr *env) {
     env_add(env, expr_str("quote"), expr_builtin(eval_quote));
     env_add(env, expr_str("add"), expr_builtin(eval_add));
@@ -208,6 +218,7 @@ static void eval_add_builtins(Expr *env) {
     env_add(env, expr_str("fn"), expr_builtin(eval_fn));
     env_add(env, expr_str("def"), expr_builtin(eval_def));
     env_add(env, expr_str("readfile"), expr_builtin(eval_builtin_readfile));
+    env_add(env, expr_str("set"), expr_builtin(eval_builtin_set));
     // env_add(env, expr_str("cons?"), expr_builtin(eval_is_cons));
     // env_add(env, expr_str("nil?"),  expr_builtin(eval_is_nil));
 }
