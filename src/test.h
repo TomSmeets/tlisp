@@ -83,4 +83,6 @@ static void test(void) {
         "(list a b (f))",
         "(2 1 1)"
     );
+    test_eval("(if (add 1 1) 123 456)", "123");
+    test_eval("(if (add 0 0) 123 456)", "456");
 }

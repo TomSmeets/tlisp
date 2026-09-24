@@ -203,6 +203,20 @@ static Expr eval_builtin_set(Expr *env, Expr args) {
     return expr_nil();
 }
 
+static Expr eval_builtin_if(Expr *env, Expr args) {
+    Expr cond = expr_pop(&args);
+    Expr if_true = expr_pop(&args);
+    Expr if_false = expr_pop(&args);
+    assert(expr_is_nil(args));
+
+    cond = eval_value(env, cond);
+    if(expr_get_value(cond)) {
+        return eval_value(env, if_true);
+    } else {
+        return eval_value(env, if_false);
+    }
+}
+
 static void eval_add_builtins(Expr *env) {
     env_add(env, expr_str("quote"), expr_builtin(eval_quote));
     env_add(env, expr_str("add"), expr_builtin(eval_add));
@@ -219,6 +233,7 @@ static void eval_add_builtins(Expr *env) {
     env_add(env, expr_str("def"), expr_builtin(eval_def));
     env_add(env, expr_str("readfile"), expr_builtin(eval_builtin_readfile));
     env_add(env, expr_str("set"), expr_builtin(eval_builtin_set));
+    env_add(env, expr_str("if"), expr_builtin(eval_builtin_if));
     // env_add(env, expr_str("cons?"), expr_builtin(eval_is_cons));
     // env_add(env, expr_str("nil?"),  expr_builtin(eval_is_nil));
 }
