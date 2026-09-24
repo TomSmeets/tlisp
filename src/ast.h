@@ -134,7 +134,7 @@ static u32 free_count = 0;
 static Expr expr_freelist;
 
 static u32 expr_count = 0;
-static Expr_Int expr_heap[1024 * 64];
+static Expr_Int expr_heap[1024 * 1024];
 
 static Expr expr_alloc(Expr_Type type) {
     Expr ix;

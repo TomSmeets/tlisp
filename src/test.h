@@ -85,4 +85,17 @@ static void test(void) {
     );
     test_eval("(if (add 1 1) 123 456)", "123");
     test_eval("(if (add 0 0) 123 456)", "456");
+    test_eval(
+        "(let i 5)"
+        "(let j 1)"
+        "(let xs ())"
+        "(while i (do"
+        "  (set i (add i -1))"
+        "  (set j (mul j 2))"
+        "  (print (list i j))"
+        "  (set xs (cons (list i j) xs))"
+        "))"
+        "xs",
+        "((0 32) (1 16) (2 8) (3 4) (4 2))"
+    );
 }

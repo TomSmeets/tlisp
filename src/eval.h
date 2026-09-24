@@ -30,6 +30,15 @@ static Expr eval_add(Expr *env, Expr args) {
     return expr_value(sum);
 }
 
+static Expr eval_mul(Expr *env, Expr args) {
+    i64 sum = 1;
+    while (!expr_is_nil(args)) {
+        Expr car = eval_value(env, expr_pop(&args));
+        sum *= expr_get_value(car);
+    }
+    return expr_value(sum);
+}
+
 // (let x y)
 static Expr eval_let(Expr *env, Expr args) {
     Expr key = expr_pop(&args);
@@ -194,12 +203,10 @@ static Expr eval_builtin_readfile(Expr *env, Expr args) {
 }
 
 static Expr eval_builtin_set(Expr *env, Expr args) {
-    Expr arg0 = eval_value(env, expr_pop(&args));
+    Expr arg0 = expr_pop(&args);
     Expr arg1 = eval_value(env, expr_pop(&args));
     assert(expr_is_nil(args));
-
-    expr_set_type(arg0, EXPR_TYPE_VALUE);
-    expr_set_val(arg0, expr_get_value(arg1));
+    env_set(*env, arg0, arg1);
     return expr_nil();
 }
 
@@ -217,9 +224,21 @@ static Expr eval_builtin_if(Expr *env, Expr args) {
     }
 }
 
+static Expr eval_builtin_while(Expr *env, Expr args) {
+    Expr cond = expr_pop(&args);
+    Expr body = expr_pop(&args);
+    assert(expr_is_nil(args));
+
+    for (;;) {
+        if (!expr_get_value(eval_value(env, cond))) return expr_nil();
+        eval_value(env, body);
+    }
+}
+
 static void eval_add_builtins(Expr *env) {
     env_add(env, expr_str("quote"), expr_builtin(eval_quote));
     env_add(env, expr_str("add"), expr_builtin(eval_add));
+    env_add(env, expr_str("mul"), expr_builtin(eval_mul));
     env_add(env, expr_str("let"), expr_builtin(eval_let));
     env_add(env, expr_str("do"), expr_builtin(eval_do));
     env_add(env, expr_str("cons"), expr_builtin(eval_cons));
@@ -234,6 +253,7 @@ static void eval_add_builtins(Expr *env) {
     env_add(env, expr_str("readfile"), expr_builtin(eval_builtin_readfile));
     env_add(env, expr_str("set"), expr_builtin(eval_builtin_set));
     env_add(env, expr_str("if"), expr_builtin(eval_builtin_if));
+    env_add(env, expr_str("while"), expr_builtin(eval_builtin_while));
     // env_add(env, expr_str("cons?"), expr_builtin(eval_is_cons));
     // env_add(env, expr_str("nil?"),  expr_builtin(eval_is_nil));
 }
