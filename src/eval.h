@@ -335,12 +335,13 @@ static Expr eval_list(Expr *env, Expr list) {
     if (expr_get_type(name) == EXPR_TYPE_BUILTIN) {
         if (expr_get_builtin(name) == (void *)eval_fnapp) return list;
         return expr_get_builtin(name)(env, args);
-    } else {
-        // Must be in the form ((fn ..) ..)
-        assert(expr_get_type(name) == EXPR_TYPE_CONS);
-        assert(expr_get_type(expr_get_car(name)) == EXPR_TYPE_BUILTIN);
+    } else if (expr_get_type(name) == EXPR_TYPE_CONS && expr_get_type(expr_get_car(name)) == EXPR_TYPE_BUILTIN) {
         assert(expr_get_builtin(expr_get_car(name)) == (void *)eval_fnapp);
         return eval_fnapp(env, name, args);
+    } else {
+        printf("error: label not found: ");
+        pretty_value(list);
+        printf("\n");
     }
     return expr_nil();
 }

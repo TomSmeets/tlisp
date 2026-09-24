@@ -35,7 +35,7 @@ static void test_eval(char *input, char *expect) {
         printf("Expect: ");
         pretty_value(expect_exp);
         printf("\n");
-    printf("\n");
+        printf("\n");
     }
 }
 
