@@ -272,7 +272,7 @@ static Expr eval_builtin_eq(Expr *env, Expr args) {
 static Expr eval_builtin_isnil(Expr *env, Expr args) {
     Expr expr = eval_value(env, expr_pop(&args));
     assert(expr_is_nil(args));
-    return expr_value(expr_is_nil(args));
+    return expr_value(expr_is_nil(expr));
 }
 
 static void eval_add_builtins(Expr *env) {
