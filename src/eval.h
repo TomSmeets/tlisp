@@ -37,10 +37,10 @@ static Expr eval_sub(Expr *env, Expr args) {
     while (!expr_is_nil(args)) {
         Expr car = eval_value(env, expr_pop(&args));
 
-        if(first) {
-        sum += expr_get_value(car);
+        if (first) {
+            sum += expr_get_value(car);
         } else {
-        sum -= expr_get_value(car);
+            sum -= expr_get_value(car);
         }
         first = false;
     }
@@ -251,7 +251,6 @@ static Expr eval_builtin_while(Expr *env, Expr args) {
         eval_value(env, body);
     }
 }
-
 
 static Expr eval_builtin_not(Expr *env, Expr args) {
     Expr expr = expr_pop(&args);
