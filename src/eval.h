@@ -30,6 +30,23 @@ static Expr eval_add(Expr *env, Expr args) {
     return expr_value(sum);
 }
 
+// Sum all arguments
+static Expr eval_sub(Expr *env, Expr args) {
+    i64 sum = 0;
+    bool first = true;
+    while (!expr_is_nil(args)) {
+        Expr car = eval_value(env, expr_pop(&args));
+
+        if(first) {
+        sum += expr_get_value(car);
+        } else {
+        sum -= expr_get_value(car);
+        }
+        first = false;
+    }
+    return expr_value(sum);
+}
+
 static Expr eval_mul(Expr *env, Expr args) {
     i64 sum = 1;
     while (!expr_is_nil(args)) {
@@ -235,9 +252,27 @@ static Expr eval_builtin_while(Expr *env, Expr args) {
     }
 }
 
+
+static Expr eval_builtin_not(Expr *env, Expr args) {
+    Expr expr = expr_pop(&args);
+    assert(expr_is_nil(args));
+
+    return expr_value(!expr_get_value(eval_value(env, expr)));
+}
+
+static Expr eval_builtin_eq(Expr *env, Expr args) {
+    Expr cmp = eval_value(env, expr_pop(&args));
+
+    while (!expr_is_nil(args)) {
+        Expr other = eval_value(env, expr_pop(&args));
+        if (!expr_eq(cmp, other)) return expr_value(0);
+    }
+    return expr_value(1);
+}
 static void eval_add_builtins(Expr *env) {
     env_add(env, expr_str("quote"), expr_builtin(eval_quote));
     env_add(env, expr_str("add"), expr_builtin(eval_add));
+    env_add(env, expr_str("sub"), expr_builtin(eval_sub));
     env_add(env, expr_str("mul"), expr_builtin(eval_mul));
     env_add(env, expr_str("let"), expr_builtin(eval_let));
     env_add(env, expr_str("do"), expr_builtin(eval_do));
@@ -254,6 +289,8 @@ static void eval_add_builtins(Expr *env) {
     env_add(env, expr_str("set"), expr_builtin(eval_builtin_set));
     env_add(env, expr_str("if"), expr_builtin(eval_builtin_if));
     env_add(env, expr_str("while"), expr_builtin(eval_builtin_while));
+    env_add(env, expr_str("not"), expr_builtin(eval_builtin_not));
+    env_add(env, expr_str("eq"), expr_builtin(eval_builtin_eq));
     // env_add(env, expr_str("cons?"), expr_builtin(eval_is_cons));
     // env_add(env, expr_str("nil?"),  expr_builtin(eval_is_nil));
 }

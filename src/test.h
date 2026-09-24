@@ -19,24 +19,24 @@ static void test_parse(char *input, Expr expect) {
 
 static void test_eval(char *input, char *expect) {
     Expr input_exp = parse(input);
-    printf("Test:  ");
-    pretty_value(input_exp);
-    printf("\n");
 
     Expr env = expr_nil();
     eval_add_builtins(&env);
     Expr expect_exp = parse(expect);
     Expr eval = eval_value(&env, input_exp);
-    printf("Eval:  ");
-    pretty_value(eval);
-    printf("\n");
     if (!expr_eq(eval, expect_exp)) {
+        printf("!!!!! FAIL !!!!!\n");
+        printf("Test:  ");
+        pretty_value(input_exp);
+        printf("\n");
+        printf("Eval:  ");
+        pretty_value(eval);
+        printf("\n");
         printf("Expect: ");
         pretty_value(expect_exp);
         printf("\n");
-        printf("!!!!! FAIL !!!!!\n");
-    }
     printf("\n");
+    }
 }
 
 static void test(void) {
@@ -49,6 +49,12 @@ static void test(void) {
 
     test_eval("1", "1");
     test_eval("(add 1 2 -4)", "-1");
+    test_eval("(sub 1 2 3)", "-4");
+    test_eval("(eq 1 1)", "1");
+    test_eval("(eq 1 2)", "0");
+    test_eval("(eq 2 1)", "0");
+    test_eval("(eq () 1)", "0");
+    test_eval("(eq (list 1 2) (cons 1 (cons 2 ())))", "1");
     test_eval("(add (add 1 2) 3 (add 4 5 6) 7)", "28");
     test_eval("(quote (add 1 2))", "(add 1 2)");
     test_eval("(quote (1 . 2))", "(1 . 2)");
@@ -90,7 +96,7 @@ static void test(void) {
         "(let j 1)"
         "(let xs ())"
         "(while i (do"
-        "  (set i (add i -1))"
+        "  (set i (sub i 1))"
         "  (set j (mul j 2))"
         "  (print (list i j))"
         "  (set xs (cons (list i j) xs))"
