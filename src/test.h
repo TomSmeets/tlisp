@@ -42,6 +42,8 @@ static void test_eval(char *input, char *expect) {
 static void test(void) {
     test_parse("1", expr_value(1));
     test_parse("-1", expr_value(-1));
+    test_parse("(hello world-1 5)", expr_cons(expr_str("hello"), expr_cons(expr_str("world-1"), expr_cons(expr_value(5), expr_nil()))));
+    test_parse("(\"hello world-1 5\")", expr_cons(expr_str("hello world-1 5"), expr_nil()));
     test_parse("12345678", expr_value(12345678));
     test_parse("()", expr_nil());
     test_parse("(1 . 2)", expr_cons(expr_value(1), expr_value(2)));
@@ -53,6 +55,8 @@ static void test(void) {
     test_eval("(eq 1 1)", "1");
     test_eval("(eq 1 2)", "0");
     test_eval("(eq 2 1)", "0");
+    test_eval("(not 1)", "0");
+    test_eval("(not (eq 1 1))", "0");
     test_eval("(eq () 1)", "0");
     test_eval("(eq (list 1 2) (cons 1 (cons 2 ())))", "1");
     test_eval("(add (add 1 2) 3 (add 4 5 6) 7)", "28");

@@ -269,6 +269,13 @@ static Expr eval_builtin_eq(Expr *env, Expr args) {
     }
     return expr_value(1);
 }
+
+static Expr eval_builtin_isnil(Expr *env, Expr args) {
+    Expr expr = eval_value(env, expr_pop(&args));
+    assert(expr_is_nil(args));
+    return expr_value(expr_is_nil(args));
+}
+
 static void eval_add_builtins(Expr *env) {
     env_add(env, expr_str("quote"), expr_builtin(eval_quote));
     env_add(env, expr_str("add"), expr_builtin(eval_add));
@@ -291,6 +298,7 @@ static void eval_add_builtins(Expr *env) {
     env_add(env, expr_str("while"), expr_builtin(eval_builtin_while));
     env_add(env, expr_str("not"), expr_builtin(eval_builtin_not));
     env_add(env, expr_str("eq"), expr_builtin(eval_builtin_eq));
+    env_add(env, expr_str("nil?"), expr_builtin(eval_builtin_isnil));
     // env_add(env, expr_str("cons?"), expr_builtin(eval_is_cons));
     // env_add(env, expr_str("nil?"),  expr_builtin(eval_is_nil));
 }

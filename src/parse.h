@@ -70,6 +70,20 @@ static Expr parse_value(Parse *p) {
         return expr_nil();
     }
 
+    if (c == '"') {
+        parse_next(p);
+        char *expr_start = p->cursor;
+        for (;;) {
+            c = parse_peek(p);
+            if (!c) break;
+            if (c == '"') break;
+            parse_next(p);
+        }
+        char *expr_end = p->cursor;
+        parse_next(p);
+        return expr_bytes(expr_end - expr_start, (u8 *)expr_start);
+    }
+
     if ((c >= '0' && c <= '9') || (c == '-' || c == '+')) {
         return expr_value(parse_long(p));
     }
