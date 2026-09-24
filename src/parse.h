@@ -81,7 +81,7 @@ static Expr parse_value(Parse *p) {
         }
         char *expr_end = p->cursor;
         parse_next(p);
-        return expr_bytes(expr_end - expr_start, (u8 *)expr_start);
+        return expr_cons(expr_str("quote"), expr_cons(expr_bytes(expr_end - expr_start, (u8 *)expr_start), expr_nil()));
     }
 
     if ((c >= '0' && c <= '9') || (c == '-' || c == '+')) {
