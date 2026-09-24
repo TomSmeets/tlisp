@@ -217,7 +217,7 @@ static Expr eval_builtin_if(Expr *env, Expr args) {
     assert(expr_is_nil(args));
 
     cond = eval_value(env, cond);
-    if(expr_get_value(cond)) {
+    if (expr_get_value(cond)) {
         return eval_value(env, if_true);
     } else {
         return eval_value(env, if_false);
