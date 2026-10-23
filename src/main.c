@@ -1,51 +1,19 @@
-// #include "ast.h"
-// #include "error.h"
-#include "eval.h"
-#include "parse.h"
-#include "pretty.h"
-#include "test.h"
+#include "type.h"
+#include "lisp_pretty.h"
+#include "lisp_new.h"
 
-static char *mem_read_file(char *path) {
-    FILE *f = fopen(path, "r");
-    void *ptr = heap_data + heap_used;
-    heap_used += fread(ptr, 1, sizeof(heap_data) - heap_used, f);
-    heap_data[heap_used++] = 0;
-    return (char *)ptr;
-}
+int main(void) {
+    LispPtr list = LISP_NIL;
+    lisp_push(&list, lisp_new_number(1));
+    lisp_push(&list, lisp_new_number(2));
+    lisp_push(&list, lisp_new_label("three"));
+    lisp_push(&list, lisp_new_string("Four"));
+    lisp_push(&list, LISP_NIL);
 
-int main(int argc, char **argv) {
-    test();
-
-    if (argc != 2) {
-        printf("usage: tlisp [SOURCE]\n");
-        return 1;
-    }
-    char *path = argv[1];
-    printf("Path: %s\n", path);
-
-    char *source = mem_read_file(path);
-    printf("Source: %s\n", source);
-
-    Expr p = parse(source);
-    printf("Parse: ");
-    pretty_value(p);
-    printf("\n");
-
-    Expr env = expr_nil();
-    eval_add_builtins(&env);
-    Expr e = eval_value(&env, p);
-
-    printf("total=%u free=%u used=%u\n", expr_count, free_count, expr_count - free_count);
-    expr_mark(e);
-    expr_mark(env);
-    expr_sweep();
-    printf("total=%u free=%u used=%u\n", expr_count, free_count, expr_count - free_count);
-
-    printf("EVAL: ");
-    pretty_value(e);
-    printf("\n");
-
-    // test();
-    // eval_value(scope(parse(source), 0));
-    return 0;
+    lisp_pretty_print("NIL:  ", LISP_NIL, "\n");
+    lisp_pretty_print("CONS: ", lisp_new_cons(LISP_NIL, LISP_NIL), "\n");
+    lisp_pretty_print("NUM:  ", lisp_new_number(69), "\n");
+    lisp_pretty_print("STR:  ", lisp_new_string("Hello World"), "\n");
+    lisp_pretty_print("LAB:  ", lisp_new_label("hello-world"), "\n");
+    lisp_pretty_print("LIST: ", list, "\n");
 }
