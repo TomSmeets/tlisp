@@ -1,6 +1,6 @@
-#include "type.h"
-#include "lisp_pretty.h"
 #include "lisp_new.h"
+#include "lisp_pretty.h"
+#include "type.h"
 
 int main(void) {
     LispPtr list = LISP_NIL;

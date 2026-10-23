@@ -8,12 +8,12 @@
 static void lisp_pretty(LispPtr ptr, Write *w) {
     LispType type = lisp_type(ptr);
 
-    if(type == LISP_TYPE_NIL) {
+    if (type == LISP_TYPE_NIL) {
         write_s(w, "()");
         return;
     }
 
-    if(type == LISP_TYPE_CONS) {
+    if (type == LISP_TYPE_CONS) {
         write_s(w, "(");
         for (;;) {
             LispValue *val = lisp_value(ptr);
@@ -39,14 +39,14 @@ static void lisp_pretty(LispPtr ptr, Write *w) {
         return;
     }
 
- if(type == LISP_TYPE_STRING) {
+    if (type == LISP_TYPE_STRING) {
         write_s(w, "\"");
         for (;;) {
             LispValue *val = lisp_value(ptr);
             u32 data = val->string.data;
             LispPtr cdr = val->string.cdr;
-            if(data == '\\') write_c(w, '\\');
-            if(data == '\"') write_c(w, '\\');
+            if (data == '\\') write_c(w, '\\');
+            if (data == '\"') write_c(w, '\\');
             write_c(w, data);
 
             // normal end to string
@@ -62,7 +62,7 @@ static void lisp_pretty(LispPtr ptr, Write *w) {
         return;
     }
 
- if(type == LISP_TYPE_LABEL) {
+    if (type == LISP_TYPE_LABEL) {
         for (;;) {
             LispValue *val = lisp_value(ptr);
             u32 data = val->label.data;
@@ -81,7 +81,7 @@ static void lisp_pretty(LispPtr ptr, Write *w) {
         return;
     }
 
-     if(type == LISP_TYPE_BUILTIN) {
+    if (type == LISP_TYPE_BUILTIN) {
         write_s(w, "#BUILTIN");
         return;
     }
@@ -96,8 +96,8 @@ static void lisp_pretty(LispPtr ptr, Write *w) {
 }
 
 static void lisp_pretty_print(char *prefix, LispPtr ptr, char *suffix) {
-    u8 buffer[16*1024];
-    Write write = { .size = sizeof(buffer), .data = buffer };
+    u8 buffer[16 * 1024];
+    Write write = {.size = sizeof(buffer), .data = buffer};
     write_s(&write, prefix);
     lisp_pretty(ptr, &write);
     write_s(&write, suffix);

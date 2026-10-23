@@ -1,7 +1,7 @@
 #pragma once
 #include "lisp_type.h"
 
-#define LISP_VALUE_COUNT (1024*1024)
+#define LISP_VALUE_COUNT (1024 * 1024)
 typedef struct {
     u32 count;
     LispValue values[LISP_VALUE_COUNT];

@@ -2,12 +2,12 @@
 #include "type.h"
 
 typedef enum {
-    LISP_TYPE_NIL,      
-    LISP_TYPE_CONS,     
-    LISP_TYPE_NUMBER,   
-    LISP_TYPE_STRING,   
-    LISP_TYPE_LABEL,    
-    LISP_TYPE_BUILTIN,  
+    LISP_TYPE_NIL,
+    LISP_TYPE_CONS,
+    LISP_TYPE_NUMBER,
+    LISP_TYPE_STRING,
+    LISP_TYPE_LABEL,
+    LISP_TYPE_BUILTIN,
 } LispType;
 
 typedef struct {

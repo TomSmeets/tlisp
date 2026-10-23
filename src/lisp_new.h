@@ -20,7 +20,7 @@ static LispPtr lisp_new_number(i64 number) {
 static LispPtr lisp_new_string(char *str) {
     u32 len = strlen(str);
     LispPtr cdr = LISP_NIL;
-    for(u32 i = 0; i < len; ++i) {
+    for (u32 i = 0; i < len; ++i) {
         LispPtr ptr = lisp_alloc(LISP_TYPE_STRING);
         LispValue *val = lisp_value(ptr);
         val->string.data = str[len - i - 1];
@@ -34,7 +34,7 @@ static LispPtr lisp_new_string(char *str) {
 static LispPtr lisp_new_label(char *str) {
     u32 len = strlen(str);
     LispPtr cdr = LISP_NIL;
-    for(u32 i = 0; i < len; ++i) {
+    for (u32 i = 0; i < len; ++i) {
         LispPtr ptr = lisp_alloc(LISP_TYPE_LABEL);
         LispValue *val = lisp_value(ptr);
         val->label.data = str[len - i - 1];
