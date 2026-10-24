@@ -56,7 +56,7 @@ static void lisp_push(LispPtr *list, LispPtr item) {
 
 static void lisp_append(LispPtr *first, LispPtr *last, LispPtr item) {
     LispPtr new_last = lisp_new_cons(item, LISP_NIL);
-    if(lisp_type(*first) == LISP_TYPE_NIL) {
+    if (lisp_type(*first) == LISP_TYPE_NIL) {
         *first = new_last;
         *last = new_last;
         return;

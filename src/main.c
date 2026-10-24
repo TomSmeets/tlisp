@@ -1,6 +1,6 @@
 #include "lisp_new.h"
-#include "lisp_pretty.h"
 #include "lisp_parse.h"
+#include "lisp_pretty.h"
 #include "read.h"
 #include "type.h"
 

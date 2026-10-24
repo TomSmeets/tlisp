@@ -6,7 +6,6 @@ typedef struct {
     u32 used;
     u8 *data;
 
-
     char *error;
     u32 error_index;
 } Read;
@@ -33,7 +32,7 @@ static u8 read_peek(Read *read) {
 static u64 read_u64(Read *read) {
     u64 value = 0;
     bool made_progress = false;
-    for(;;) {
+    for (;;) {
         if (read_eof(read)) break;
         u8 c = read_peek(read);
         bool is_digit = c >= '0' && c <= '9';
@@ -51,11 +50,11 @@ static u64 read_u64(Read *read) {
 static i64 read_i64(Read *read) {
     u8 c = read_peek(read);
 
-    if(c == '-' || c == '+') {
+    if (c == '-' || c == '+') {
         read_next(read);
     }
 
     i64 out = read_u64(read);
-    if(c == '-') out = -out;
+    if (c == '-') out = -out;
     return out;
 }

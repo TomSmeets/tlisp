@@ -1,6 +1,6 @@
 #pragma once
-#include "read.h"
 #include "lisp_new.h"
+#include "read.h"
 
 // Consume any number of whitespace chars
 static void read_whitespace(Read *read) {
@@ -30,8 +30,8 @@ static LispPtr read_lisp(Read *read) {
     if (c == '(') {
         read_next(read);
         LispPtr list_start = LISP_NIL;
-        LispPtr list_end   = LISP_NIL;
-        for(;;) {
+        LispPtr list_end = LISP_NIL;
+        for (;;) {
             read_whitespace(read);
 
             if (read_peek(read) == ')') {
@@ -46,14 +46,14 @@ static LispPtr read_lisp(Read *read) {
         }
     }
 
-    if(c == '"') {
+    if (c == '"') {
         read_next(read);
         u32 str_start = read->used;
-        u32 str_end   = str_start;
+        u32 str_end = str_start;
         while (1) {
             str_end = read->used;
-            if(read_eof(read)) break;
-            if(read->error) return LISP_NIL;
+            if (read_eof(read)) break;
+            if (read->error) return LISP_NIL;
             if (read_peek(read) == '\"') {
                 read_next(read);
                 break;
@@ -70,8 +70,8 @@ static LispPtr read_lisp(Read *read) {
         u32 lab_end;
         while (1) {
             lab_end = read->used;
-            if(read_eof(read)) break;
-            if(read->error) return LISP_NIL;
+            if (read_eof(read)) break;
+            if (read->error) return LISP_NIL;
 
             u8 c = read_peek(read);
             if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') || c == '_' || (c >= '0' && c <= '9') || c == '-' || c == '?' || c == '!')) {
@@ -90,7 +90,7 @@ static LispPtr lisp_parse(char *str) {
     Read read = {.size = strlen(str), .data = (u8 *)str};
     LispPtr p = read_lisp(&read);
 
-    if(read.error) {
+    if (read.error) {
         printf("Parse error at ix=%i: %s\n", read.error_index, read.error);
 
         printf("%s\n", read.data);
